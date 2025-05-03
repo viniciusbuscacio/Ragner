@@ -1,0 +1,1 @@
+# Este arquivo __init__.py marca o diretório como um pacote Python
