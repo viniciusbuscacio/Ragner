@@ -4,6 +4,15 @@
 
 Este software educacional, desenvolvido em Python, tem como objetivo demonstrar de forma clara e interativa o funcionamento interno da técnica de Geração Aumentada por Recuperação (RAG). Através de uma interface de linha de comando (CLI), usuários, especialmente estudantes de tecnologia, poderão acompanhar cada etapa do processo, desde a indexação de documentos até a geração de respostas contextualizadas por uma Inteligência Artificial.
 
+## Arquitetura do Projeto
+
+O projeto segue uma arquitetura limpa (Clean Architecture) com separação clara de responsabilidades:
+
+* **Domain**: Classes de entidades centrais do sistema (Documento, Chunk, Embedding, etc.)
+* **Use Cases**: Regras de negócio e casos de uso da aplicação
+* **Infrastructure**: Implementações concretas para bancos de dados, APIs externas e serviços
+* **Presentation**: Interface com o usuário (CLI) e apresentação dos dados
+
 ## Funcionalidades Principais
 
 * **Indexação de Documentos:** Permite adicionar arquivos nos formatos TXT, DOC/DOCX e PDF a uma pasta específica. O software processa esses arquivos, divide-os em partes (chunks) e cria representações vetoriais (embeddings) utilizando modelos da OpenAI.
@@ -22,32 +31,34 @@ Este software educacional, desenvolvido em Python, tem como objetivo demonstrar 
 
 ## Como Utilizar
 
-1.  **Pré-requisitos:**
-    * Python 3.x instalado no seu sistema.
-    * Uma chave de API da OpenAI. Você pode obter uma gratuitamente no site da [OpenAI](https://www.openai.com).
+1. **Pré-requisitos:**
+   * Python 3.x instalado no seu sistema.
+   * Uma chave de API da OpenAI. Você pode obter uma gratuitamente no site da [OpenAI](https://www.openai.com).
 
-    * Clone este repositório (se aplicável) ou copie os arquivos do software para o seu computador.
-    * Para executar (no PowerShell):
-       ```powershell
-       git clone https://github.com/viniciusbuscacio/Ragner.git
-       python -m venv venv
-       .\venv\Scripts\activate
-       python -m pip install -r .\requirements.txt
-       python Ragner/Ragner.py
-       ```
+2. **Instalação:**
+   * Clone este repositório ou copie os arquivos do software para o seu computador.
+   * Para executar (no PowerShell):
+     ```powershell
+     git clone https://github.com/viniciusbuscacio/Ragner.git
+     cd Ragner3
+     python -m venv venv
+     .\venv\Scripts\activate
+     python -m pip install -r requirements.txt
+     python Ragner/Ragner.py
+     ```
 
-2.  **Configuração:**
-    * Ao executar o `Ragner.py` pela primeira vez (ou se a chave não for encontrada), o software solicitará que você configure a sua chave de API da OpenAI. Siga as instruções exibidas no terminal. A chave será salva para uso futuro (de forma segura, se possível, ou via variável de ambiente).
+3. **Configuração:**
+   * Ao executar o `Ragner.py` pela primeira vez (ou se a chave não for encontrada), o software solicitará que você configure a sua chave de API da OpenAI. Siga as instruções exibidas no terminal. A chave será salva para uso futuro.
 
-3.  **Adicionando Documentos:**
-    * Para que o chatbot tenha informações para responder, você precisa adicionar arquivos (TXT, DOC/DOCX, PDF, XLS/XLSX, PPT/PPTX) na pasta `documentos` localizada no mesmo diretório do script `Ragner.py`.
-    * Após adicionar os arquivos, o software os processará em segundo plano (ou você pode usar o comando `recarregar_arquivos_da_pasta` no menu).
+4. **Adicionando Documentos:**
+   * Para que o chatbot tenha informações para responder, você precisa adicionar arquivos (TXT, DOC/DOCX, PDF) na pasta `documentos` localizada no mesmo diretório do script `Ragner.py`.
+   * Após adicionar os arquivos, o software os processará em segundo plano (ou você pode usar o comando `recarregar_arquivos_da_pasta` no menu).
 
-4.  **Interagindo com o Chatbot:**
-    * Execute o script `Ragner.py` no seu terminal: `python Ragner.py`
-    * O chatbot será iniciado e você poderá digitar suas perguntas diretamente.
-    * Para acessar o menu de opções, digite `menu` e pressione Enter.
-    * Para sair do programa, digite `sair` e pressione Enter.
+5. **Interagindo com o Chatbot:**
+   * Execute o script `Ragner.py` no seu terminal: `python Ragner/Ragner.py`
+   * O chatbot será iniciado e você poderá digitar suas perguntas diretamente.
+   * Para acessar o menu de opções, digite `menu` e pressione Enter.
+   * Para sair do programa, digite `sair` e pressione Enter.
 
 ## Funcionamento Interno e Metodologia
 
@@ -55,11 +66,11 @@ Este software implementa as seguintes etapas para demonstrar o funcionamento da 
 
 **Configuração:** Para acessar os modelos de linguagem da OpenAI, o usuário precisa configurar uma chave API, obtida gratuitamente no site da OpenAI, seguindo as instruções fornecidas pelo software.
 
-**Indexação:** Após a configuração da chave API, o usuário pode adicionar arquivos nos formatos PDF, DOC/DOCX, XLS/XLSX, PPT/PPTX e TXT a uma pasta específica. O software utiliza a biblioteca Facebook AI Similarity Search (FAISS) e os modelos de vetorização (embedding) da OpenAI (como o `text-embedding-ada-002` ou similar) para indexar esses arquivos. Os blocos de texto (chunks) extraídos dos arquivos são armazenados em tabelas em um banco de dados transacional SQLite, que são consultadas para a coleta desses chunks durante a busca. Todas as ações do aplicativo são exibidas no prompt com explicações para o usuário acompanhar o processo.
+**Indexação:** Após a configuração da chave API, o usuário pode adicionar arquivos nos formatos PDF, DOC/DOCX e TXT a uma pasta específica. O software utiliza a biblioteca Facebook AI Similarity Search (FAISS) e os modelos de vetorização (embedding) da OpenAI (como o `text-embedding-ada-002`) para indexar esses arquivos. Os blocos de texto (chunks) extraídos dos arquivos são armazenados em tabelas em um banco de dados SQLite, que são consultadas para a coleta desses chunks durante a busca. Todas as ações do aplicativo são exibidas no prompt com explicações para o usuário acompanhar o processo.
 
 **Busca e Resposta:** O usuário pode fazer perguntas ao chatbot. O software envia a pergunta, juntamente com o contexto dos documentos relevantes, para a API da OpenAI. Os modelos de linguagem da OpenAI são responsáveis por gerar a resposta. A similaridade semântica entre a pergunta e os documentos é calculada utilizando o módulo FAISS.
 
-**Avaliação do Aprendizado:** Para avaliar a evolução do conhecimento sobre o RAG como consequência da utilização deste software, será realizado um levantamento de campo com estudantes de tecnologia. Uma pesquisa quantitativa com perguntas estruturadas será aplicada antes e depois do uso do software para coletar dados sobre o conhecimento dos estudantes sobre os conceitos do RAG (ex: o que são embeddings, como funciona a busca vetorial, etc.). Os dados coletados serão analisados estatisticamente para comparar o número de respostas corretas antes e depois do uso do software, permitindo quantificar o ganho de conhecimento.
+**Avaliação do Aprendizado:** Para avaliar a evolução do conhecimento sobre o RAG como consequência da utilização deste software, será realizado um levantamento de campo com estudantes de tecnologia. Uma pesquisa quantitativa com perguntas estruturadas será aplicada antes e depois do uso do software para coletar dados sobre o conhecimento dos estudantes sobre os conceitos do RAG.
 
 ## Tecnologias Utilizadas
 
@@ -69,8 +80,27 @@ Este software implementa as seguintes etapas para demonstrar o funcionamento da 
 * **SQLite:** Banco de dados leve para armazenamento dos chunks.
 * **PyPDF2:** Para leitura de arquivos PDF.
 * **python-docx:** Para leitura de arquivos DOC e DOCX.
-* **Outras bibliotecas:** Para leitura de outros formatos de arquivo (XLS/XLSX, PPT/PPTX).
-* **SQLAlchemy:** Para interação mais robusta com o SQLite.
+* **SQLAlchemy:** Para interação com o SQLite.
+* **PyCryptodome:** Para operações de criptografia.
+
+## Estrutura do Projeto
+
+```
+Ragner/
+├── domain/             # Classes de domínio e entidades
+│   ├── Chunk.py        # Representação de fragmentos de texto
+│   ├── Documento.py    # Representação de documentos
+│   ├── Embedding.py    # Representação de vetores de embedding
+│   └── ...
+├── infrastructure/     # Implementações concretas
+│   ├── database/       # Acesso ao banco de dados SQLite
+│   ├── file_loaders/   # Carregadores de diferentes tipos de arquivo
+│   ├── language_model/ # Interface com a API OpenAI
+│   └── vector_store/   # Interface com o FAISS
+├── presentation/       # Interface com o usuário
+│   └── cli/            # Interface de linha de comando
+└── usecases/           # Regras de negócio e casos de uso
+```
 
 ## Para Aprender Mais
 
@@ -81,8 +111,14 @@ Este software implementa as seguintes etapas para demonstrar o funcionamento da 
 
 ## Contribuição
 
-(Opcional, se você quiser abrir o projeto para contribuições)
+Contribuições são bem-vindas! Para contribuir:
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Faça commit das suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Envie para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
 
 ## Licença
 
-(Opcional, adicione a licença do seu projeto)
+Este projeto é licenciado sob a licença MIT - veja o arquivo LICENSE para mais detalhes.

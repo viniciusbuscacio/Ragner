@@ -344,7 +344,7 @@ class ChatController:
         
         self.presenter.exibir_mensagem_info(f"Arquivos indexados ({len(documentos)}):")
         for doc in documentos:
-            self.presenter.exibir_mensagem_info(f"- {doc.nome} (ID: {doc.id}, tipo: {doc.tipo})")
+            self.presenter.exibir_mensagem_info(f"- {doc['arquivo_nome']} (ID: {doc['arquivo_uuid']}, tipo: {doc['arquivo_tipo']})")
     
     def _exibir_status_chunks(self):
         """Exibe informações sobre os chunks indexados."""

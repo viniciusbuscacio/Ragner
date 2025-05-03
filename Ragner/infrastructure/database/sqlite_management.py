@@ -673,6 +673,16 @@ class SQLiteManagement:
             print(f"Erro ao contar documentos: {str(e)}")
             return 0
     
+    def listar_documentos(self):
+        """
+        Lista todos os documentos da tabela Arquivos.
+        Um alias para listar_arquivos_db() para manter consistência na nomenclatura.
+        
+        Returns:
+            list: Lista de dicionários com os dados dos arquivos
+        """
+        return self.listar_arquivos_db()
+    
     def contar_chunks(self):
         """
         Conta o número total de chunks na tabela Chunks.
