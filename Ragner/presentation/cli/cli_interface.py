@@ -5,7 +5,7 @@
 CLI Interface: Interface de linha de comando para o Ragner Chatbot.
 """
 from presentation.cli.cli_cores import Cores
-
+from presentation.cli.cli_sair  import MensagemSaida
 
 class CLI:
     """
@@ -38,7 +38,7 @@ class CLI:
         while continuar:
             # Solicita entrada do usuário
             try:
-                entrada = input("\nVocê: ")
+                entrada = input(f"\n{Cores.VERDE}Você: {Cores.RESET}")
             except (KeyboardInterrupt, EOFError):
                 print("\nEncerrando o Ragner Chatbot.")
                 break
@@ -54,4 +54,4 @@ class CLI:
                 self.controller.processar_pergunta(entrada)
         
         # Encerra o programa
-        print("Obrigado por usar o Ragner Chatbot!")
+        MensagemSaida()

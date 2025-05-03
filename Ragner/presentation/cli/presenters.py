@@ -84,7 +84,7 @@ class ChatPresenter:
             resposta: Objeto Resposta
             mostrar_fontes: Se True, exibe as fontes da resposta
         """
-        print(f"\n{Cores.VERDE}Resposta:{Cores.RESET}")
+        print(f"\n{Cores.VERDE}Ragner: {Cores.RESET}")
         
         # Quebra o texto em linhas com largura adequada
         linhas = textwrap.wrap(resposta.texto, width=self.largura_terminal)

@@ -48,11 +48,9 @@ class GerarRespostaUseCase:
             # Define o prompt para o sistema, incluindo os documentos disponíveis
             documentos_lista = ", ".join(documentos_disponiveis)
             system_prompt = (
-                "Você é um assistente educacional que explica conceitos com base nas informações fornecidas. "
+                "Você é um assistente chamado Ragner, que utiliza a técnica RAG para explica conceitos com base nas informações fornecidas. "
                 "Responda à pergunta do usuário usando apenas as informações dos trechos de documentos fornecidos. "
                 "Se a resposta não estiver nos trechos ou se você não tiver certeza, indique isso claramente. "
-                f"Cite os documentos de origem quando apropriado usando: [Fonte: nome_do_documento]. "
-                f"As fontes disponíveis para citação são: {documentos_lista}. "
                 "Se uma informação vem claramente de uma fonte específica, cite-a. "
                 "Se múltiplos documentos contêm a mesma informação, cite apenas a fonte mais relevante. "
                 "Seja preciso e direto nas suas respostas."

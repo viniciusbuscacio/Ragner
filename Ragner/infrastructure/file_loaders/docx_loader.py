@@ -38,31 +38,26 @@ class DocxLoader:
             caminho_arquivo: Caminho para o arquivo DOCX
             
         Returns:
-            Documento: Documento processado com chunks
+            list: Lista de textos dos chunks extraídos do DOCX
             
         Raises:
             Exception: Se ocorrer um erro ao processar o arquivo
         """
         try:
-            # Cria o objeto Documento
-            documento = Documento.from_file_path(caminho_arquivo)
-            
             # Extrai o texto do DOCX
             texto_completo = self._extrair_texto(caminho_arquivo)
             
             # Divide o texto em chunks
             chunks = self._dividir_em_chunks(texto_completo)
             
-            # Adiciona os chunks ao documento
-            for i, texto_chunk in enumerate(chunks):
-                chunk = Chunk(texto=texto_chunk, indice_no_documento=i)
-                documento.add_chunk(chunk)
-            
-            print(f"{Cores.CINZA}DOCX carregado: {documento.nome}, {len(documento.chunks)} chunks criados{Cores.RESET}")
-            return documento
+            print(f"{Cores.CINZA}DOCX carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos{Cores.RESET}")
+                
+            return chunks
         
         except Exception as e:
             print(f"Erro ao carregar DOCX {caminho_arquivo}: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             raise
     
     def _extrair_texto(self, caminho_arquivo):
@@ -123,37 +118,57 @@ class DocxLoader:
         paragrafos = texto.split('\n')
         chunk_atual = ""
         
-        for paragrafo in paragrafos:
-            # Se o parágrafo for muito grande, divide-o
-            if len(paragrafo) > self.tamanho_chunk:
-                # Adiciona o chunk atual se não estiver vazio
-                if chunk_atual:
-                    chunks.append(chunk_atual)
-                    chunk_atual = ""
+        try:
+            for paragrafo in paragrafos:
+                # Se o parágrafo for muito grande, divide-o
+                if len(paragrafo) > self.tamanho_chunk:
+                    # Adiciona o chunk atual se não estiver vazio
+                    if chunk_atual:
+                        chunks.append(chunk_atual)
+                        chunk_atual = ""
+                    
+                    # Divide o parágrafo grande em chunks menores
+                    j = 0
+                    contador_seguranca = 0  # Contador de segurança para prevenir loop infinito
+                    max_iteracoes = 1000    # Número máximo de iterações permitidas
+
+                    while j < len(paragrafo) and contador_seguranca < max_iteracoes:
+                        fim = min(j + self.tamanho_chunk, len(paragrafo))
+                        chunk_part = paragrafo[j:fim]
+                        chunks.append(chunk_part)
+                        
+                        # Verificação crucial para evitar loop infinito
+                        j_anterior = j
+                        j = fim - self.sobreposicao
+                        
+                        if j <= j_anterior:  # Se não avançamos, forçamos o avanço
+                            j = j_anterior + max(1, fim//10)  # Avançar pelo menos 1 caractere ou 10% do tamanho
+                        
+                        contador_seguranca += 1
+                    
+                    if contador_seguranca >= max_iteracoes:
+                        # Adicionar o resto do parágrafo como um único chunk
+                        chunks.append(paragrafo[j:])
                 
-                # Divide o parágrafo grande em chunks menores
-                i = 0
-                while i < len(paragrafo):
-                    fim = min(i + self.tamanho_chunk, len(paragrafo))
-                    chunks.append(paragrafo[i:fim])
-                    i = fim - self.sobreposicao
-                    if i < 0:
-                        i = 0
+                # Se adicionar o parágrafo ao chunk atual exceder o tamanho máximo
+                elif len(chunk_atual) + len(paragrafo) + 1 > self.tamanho_chunk:
+                    # Adiciona o chunk atual e começa um novo
+                    chunks.append(chunk_atual)
+                    chunk_atual = paragrafo
+                
+                # Caso contrário, adiciona o parágrafo ao chunk atual
+                else:
+                    if chunk_atual:
+                        chunk_atual += "\n"
+                    chunk_atual += paragrafo
             
-            # Se adicionar o parágrafo ao chunk atual exceder o tamanho máximo
-            elif len(chunk_atual) + len(paragrafo) + 1 > self.tamanho_chunk:
-                # Adiciona o chunk atual e começa um novo
+            # Adiciona o último chunk se não estiver vazio
+            if chunk_atual:
                 chunks.append(chunk_atual)
-                chunk_atual = paragrafo
             
-            # Caso contrário, adiciona o parágrafo ao chunk atual
-            else:
-                if chunk_atual:
-                    chunk_atual += "\n"
-                chunk_atual += paragrafo
-        
-        # Adiciona o último chunk se não estiver vazio
-        if chunk_atual:
-            chunks.append(chunk_atual)
+        except Exception as e:
+            print(f"Erro na divisão em chunks: {str(e)}")
+            # Em caso de erro, retorna o texto completo como um único chunk
+            chunks = [texto]
         
         return chunks

@@ -7,7 +7,10 @@ Controllers: Classes responsáveis por gerenciar a interação entre a interface
 
 import os
 import sys
+import datetime
+from tabulate import tabulate
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_sair  import MensagemSaida
 
 class ChatController:
     """
@@ -264,7 +267,7 @@ class ChatController:
             self._confirmar_e_apagar_tudo()
             
         elif comando == "sair":
-            print("Encerrando o Ragner Chatbot. Até logo!")
+            # Removida a chamada a MensagemSaida() aqui, pois ela já é chamada no final do CLI.iniciar()
             return False
         
         return True
@@ -374,25 +377,171 @@ class ChatController:
         self.presenter.exibir_mensagem_info(f"Dimensão dos vetores: {estatisticas['dimensao']}")
     
     def _exibir_status_arquivos(self):
-        """Exibe a lista de arquivos indexados."""
+        """Exibe a lista de arquivos indexados em uma tabela formatada."""
         db_gateway = self.indexar_documentos_usecase.db_gateway
-        documentos = db_gateway.listar_documentos()
+        documentos = db_gateway.listar_arquivos_db()
         
         if not documentos:
             self.presenter.exibir_mensagem_info("Nenhum arquivo indexado.")
             return
         
-        self.presenter.exibir_mensagem_info(f"Arquivos indexados ({len(documentos)}):")
-        for doc in documentos:
-            self.presenter.exibir_mensagem_info(f"- {doc['arquivo_nome']} (ID: {doc['arquivo_uuid']}, tipo: {doc['arquivo_tipo']})")
-    
-    def _exibir_status_chunks(self):
-        """Exibe informações sobre os chunks indexados."""
-        db_gateway = self.indexar_documentos_usecase.db_gateway
+        # Obter estatísticas gerais
+        num_documentos = db_gateway.contar_documentos()
         num_chunks = db_gateway.contar_chunks()
         
-        self.presenter.exibir_mensagem_info(f"Total de chunks: {num_chunks}")
-        # TODO: Implementar mais estatísticas sobre chunks se necessário
+        # Exibir mensagem estatística
+        print(f"\nTemos {num_documentos} arquivo(s) indexado(s) no banco de dados, totalizando {num_chunks} chunks.")
+               
+        # Preparar os dados para a tabela
+        tabela_dados = []
+        for doc in documentos:
+            # Aumentar o limite de caracteres para o nome do arquivo (35 caracteres)
+            nome_arquivo = doc['arquivo_nome']
+            if len(nome_arquivo) > 35:  # Aumentado de 20 para 35 caracteres
+                nome_arquivo = nome_arquivo[:32] + "..."
+            
+            # Formatar o tamanho em KB ou MB
+            tamanho_bytes = doc.get('tamanho_bytes', 0)
+            if tamanho_bytes < 1024:
+                tamanho_formatado = f"{tamanho_bytes} B"
+            elif tamanho_bytes < 1024 * 1024:
+                tamanho_formatado = f"{tamanho_bytes/1024:.1f} KB"
+            else:
+                tamanho_formatado = f"{tamanho_bytes/(1024*1024):.1f} MB"
+            
+            # Contar os chunks associados a este documento
+            try:
+                conn = db_gateway.get_connection()
+                cursor = conn.cursor()
+                cursor.execute('SELECT COUNT(*) as total FROM Chunks WHERE arquivo_uuid = ?', (doc['arquivo_uuid'],))
+                num_chunks = cursor.fetchone()['total']
+            except Exception:
+                num_chunks = "N/A"
+            
+            # Adicionar à tabela (removida a coluna "Indexado em")
+            tabela_dados.append([
+                nome_arquivo,
+                doc['arquivo_tipo'].upper(),
+                tamanho_formatado,
+                num_chunks
+            ])
+        
+        # Cabeçalhos para a tabela (removido "Indexado em")
+        headers = ["Arquivo", "Tipo", "Tamanho", "Chunks"]
+        
+        # Usar tabulate para formatar a tabela
+        try:
+            # Formato "grid" conforme solicitado, com mais espaço para a coluna "Arquivo"
+            tabela_formatada = tabulate(tabela_dados, headers=headers, 
+                                       tablefmt="grid", 
+                                       maxcolwidths=[35, 6, 10, 8],  # Aumentado de 20 para 35
+                                       numalign="right")
+            print(f"\n{tabela_formatada}")
+        except Exception as e:
+            # Se houver algum problema com o tabulate, usar o formato antigo
+            self.presenter.exibir_mensagem_erro(f"Erro ao formatar tabela: {str(e)}")
+            for doc in documentos:
+                self.presenter.exibir_mensagem_info(f"- {doc['arquivo_nome']} (ID: {doc['arquivo_uuid']}, tipo: {doc['arquivo_tipo']})")
+    
+    def _exibir_status_chunks(self):
+        """Exibe informações detalhadas sobre os chunks indexados em formato tabular."""
+        db_gateway = self.indexar_documentos_usecase.db_gateway
+        
+        # Obter contagem total de chunks
+        num_chunks = db_gateway.contar_chunks()
+        
+        if num_chunks == 0:
+            self.presenter.exibir_mensagem_info("Não há chunks indexados no banco de dados.")
+            return
+            
+        # Exibir mensagem estatística
+        print(f"\nTemos {num_chunks} chunk(s) indexado(s) no banco de dados.")
+        
+        # Buscar chunks no banco de dados com informações sobre os arquivos de origem
+        try:
+            conn = db_gateway.get_connection()
+            cursor = conn.cursor()
+            query = """
+            SELECT 
+                c.chunk_uuid,
+                c.chunk_texto,
+                c.chunk_indice, 
+                a.arquivo_nome,
+                CASE 
+                    WHEN c.chunk_embedding IS NOT NULL THEN 'Sim' 
+                    ELSE 'Não' 
+                END as tem_embedding
+            FROM 
+                Chunks c
+            JOIN 
+                Arquivos a ON c.arquivo_uuid = a.arquivo_uuid
+            ORDER BY 
+                a.arquivo_nome,
+                c.chunk_indice
+            LIMIT 50
+            """
+            cursor.execute(query)
+            chunks = cursor.fetchall()
+            
+            if not chunks:
+                self.presenter.exibir_mensagem_info("Não foi possível recuperar informações sobre os chunks.")
+                return
+                
+            # Determinar se há mais chunks do que estamos exibindo
+            tem_mais_chunks = num_chunks > 50
+            
+            # Preparar os dados para a tabela
+            tabela_dados = []
+            for chunk in chunks:
+                # Limitar o texto do chunk para exibição
+                texto_chunk = chunk['chunk_texto']
+                if len(texto_chunk) > 40:
+                    texto_chunk = texto_chunk[:37] + "..."
+                
+                # Limitar o nome do arquivo
+                nome_arquivo = chunk['arquivo_nome']
+                if len(nome_arquivo) > 30:
+                    nome_arquivo = nome_arquivo[:27] + "..."
+                
+                # Adicionar à tabela
+                tabela_dados.append([
+                    chunk['chunk_indice'],
+                    nome_arquivo,
+                    texto_chunk,
+                    chunk['tem_embedding']
+                ])
+            
+            # Cabeçalhos para a tabela
+            headers = ["#", "Arquivo", "Conteúdo", "Embedding"]
+            
+            # Usar tabulate para formatar a tabela
+            try:
+                tabela_formatada = tabulate(tabela_dados, headers=headers, 
+                                           tablefmt="grid", 
+                                           maxcolwidths=[5, 30, 40, 9],
+                                           numalign="right")
+                print(f"\n{tabela_formatada}")
+                
+                # Exibir mensagem se estamos limitando a exibição
+                if tem_mais_chunks:
+                    print(f"\n{Cores.CINZA}Exibindo apenas os primeiros 50 chunks de um total de {num_chunks}.{Cores.RESET}")
+                
+            except Exception as e:
+                # Se houver algum problema com o tabulate, usar o formato antigo
+                self.presenter.exibir_mensagem_erro(f"Erro ao formatar tabela: {str(e)}")
+                for chunk in chunks[:10]:  # Limitar a 10 chunks se houver erro
+                    self.presenter.exibir_mensagem_info(f"- Chunk #{chunk['chunk_indice']} de '{chunk['arquivo_nome']}'")
+            
+            # Mostrar estatísticas sobre os embeddings
+            cursor.execute('SELECT COUNT(*) as total FROM Chunks WHERE chunk_embedding IS NOT NULL')
+            chunks_com_embedding = cursor.fetchone()['total']
+            
+            porcentagem = (chunks_com_embedding / num_chunks) * 100 if num_chunks > 0 else 0
+            print(f"\n{Cores.CINZA}Chunks com embedding: {chunks_com_embedding} de {num_chunks} ({porcentagem:.1f}%){Cores.RESET}")
+            
+        except Exception as e:
+            self.presenter.exibir_mensagem_erro(f"Erro ao recuperar informações sobre os chunks: {str(e)}")
+            self.presenter.exibir_mensagem_info(f"Total de chunks: {num_chunks}")
     
     def _exibir_status_faiss(self):
         """Exibe informações sobre o índice FAISS."""

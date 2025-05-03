@@ -33,6 +33,7 @@ from presentation.cli.cli_interface import CLI
 from presentation.cli.controllers import ChatController
 from presentation.cli.presenters import ChatPresenter
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_sair  import MensagemSaida
 
 
 def main():
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nEncerrando o Ragner Chatbot. Até logo!")
+        MensagemSaida()
         sys.exit(0)
     except Exception as e:
         print(f"\nOcorreu um erro inesperado: {str(e)}")
