@@ -284,26 +284,66 @@ class ChatController:
         self.presenter.exibir_pergunta(texto_pergunta)
         
         try:
-            # Etapa 1: Processamento da pergunta
-            self.presenter.exibir_progresso("Etapa 1", "Processando sua pergunta...")
+            # Etapa 1: Calculando o valor de embeddings da pergunta
+            self.presenter.exibir_progresso("Etapa 1", "Calculando o valor embeddings da sua pergunta...")
             language_model = self.configurar_api_key_usecase.openai_gateway
             pergunta, embedding = self.fazer_pergunta_usecase.executar(texto_pergunta, language_model)
+            
+            # Exibe uma amostra do vetor embedding resultante
+            if embedding is not None:
+                # Exibir os primeiros 5 valores do embedding
+                embedding_sample = embedding[:5]
+                embedding_str = ', '.join([f"{val:.6f}" for val in embedding_sample])
+                self.presenter.exibir_mensagem_info(f"Embedding gerado: [{embedding_str}, ...]")
             
             # Se não foi possível gerar o embedding, retorna
             if embedding is None:
                 self.presenter.exibir_mensagem_erro("Não foi possível processar sua pergunta. Tente novamente.")
                 return
             
-            # Etapa 2: Busca de contexto relevante
-            self.presenter.exibir_progresso("Etapa 2", "Buscando informações relevantes nos documentos...")
+            # Etapa 2: Busca no módulo FAISS vetores mais próximos
+            self.presenter.exibir_progresso("Etapa 2", "Buscando no módulo FAISS vetores mais próximos...")
+            
+            # Buscar chunks similares diretamente do vetor_store para mostrar informações sobre a busca
+            top_k = self.buscar_contexto_usecase.max_chunks
+            try:
+                chunk_ids, scores = self.buscar_contexto_usecase.vector_store.buscar_chunks_similares(embedding, top_k)
+                
+                # Exibir o número de vetores encontrados
+                self.presenter.exibir_progresso("Etapa 3", f"Encontrados {len(chunk_ids)} vetores similares")
+                
+                # Se encontrou algum vetor similar, mostre o score do primeiro
+                if len(chunk_ids) > 0 and len(scores) > 0:
+                    best_score = scores[0]
+                    self.presenter.exibir_mensagem_info(f"Score do vetor mais similar: {best_score:.6f} (menor valor = mais similar)")
+            except Exception as e:
+                self.presenter.exibir_mensagem_erro(f"Erro ao buscar vetores similares: {str(e)}")
+                self.presenter.exibir_progresso("Etapa 3", "Encontrados 0 vetores similares")
+            
+            # Etapa 4: Buscando no banco de dados os chunks associados com estes vetores
+            self.presenter.exibir_progresso("Etapa 4", "Buscando no banco de dados os chunks (pedaços de textos) associados com estes vetores...")
             chunks_relevantes = self.buscar_contexto_usecase.executar(embedding)
+            
+            # Etapa 5: Anexando chunks à pergunta que será enviada ao ChatGPT
+            num_chunks = len(chunks_relevantes)
+            self.presenter.exibir_progresso("Etapa 5", f"Anexando {num_chunks} chunks à pergunta que será enviada ao ChatGPT...")
+            
+            # Se não encontrou chunks relevantes, informe o usuário
+            if num_chunks == 0:
+                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A pergunta será enviada sem contexto adicional.")
             
             # Exibe o contexto encontrado
             self.presenter.exibir_contexto(chunks_relevantes)
             
-            # Etapa 3: Geração da resposta
-            self.presenter.exibir_progresso("Etapa 3", "Gerando resposta com base no contexto encontrado...")
+            # Etapa 6: Anexando o contexto e enviando a pergunta ao ChatGPT
+            self.presenter.exibir_progresso("Etapa 6", "Anexando o contexto encontrado e enviando a pergunta ao ChatGPT...")
+            
+            # Etapa 7: Coletando a resposta do ChatGPT
+            self.presenter.exibir_progresso("Etapa 7", "Coletando a resposta do ChatGPT...")
             resposta = self.gerar_resposta_usecase.executar(pergunta, chunks_relevantes)
+            
+            # Etapa 8: Respondendo ao usuário
+            self.presenter.exibir_progresso("Etapa 8", "Respondendo ao usuário...")
             
             # Exibe a resposta
             self.presenter.exibir_resposta(resposta)

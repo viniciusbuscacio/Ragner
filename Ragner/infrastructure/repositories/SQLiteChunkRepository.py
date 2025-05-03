@@ -12,8 +12,10 @@ import uuid
 from domain.repositories.ChunkRepository import ChunkRepository
 from domain.Chunk import Chunk 
 from domain.Embedding import Embedding
+
 from infrastructure.database.sqlite_management import SQLiteManagement
 
+from presentation.cli.cli_cores import Cores
 
 class SQLiteChunkRepository(ChunkRepository):
     """
@@ -112,7 +114,7 @@ class SQLiteChunkRepository(ChunkRepository):
         """
         # Verifica se o chunk existe
         if not self.existe_chunk(chunk_id):
-            print(f"Erro: Chunk {chunk_id} não encontrado no banco de dados.")
+            print(f"{Cores.VERMELHO}Erro: Chunk {chunk_id} não encontrado no banco de dados.{Cores.RESET}")
             return False
         
         # Converte o vetor para JSON para armazenamento
@@ -125,10 +127,10 @@ class SQLiteChunkRepository(ChunkRepository):
         )
         
         if resultado:
-            print(f"Embedding atualizado com sucesso para chunk_id={chunk_id}")
+            print(f"{Cores.CINZA}Indexando o conteúdo dos documentos - chunk_id={chunk_id}{Cores.RESET}")
             return True
         else:
-            print(f"Aviso: Não foi possível atualizar o embedding para chunk_id={chunk_id}")
+            print(f"{Cores.VERMELHO}Aviso: Não foi possível atualizar o embedding para chunk_id={chunk_id}{Cores.RESET}")
             return False
     
     def listar_por_arquivo(self, arquivo_uuid: str) -> List[Chunk]:

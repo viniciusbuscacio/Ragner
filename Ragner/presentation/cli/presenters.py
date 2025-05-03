@@ -68,11 +68,13 @@ class ChatPresenter:
     
     def exibir_pergunta(self, texto_pergunta):
         """
-        Exibe a pergunta do usuário formatada.
+        Prepara a UI para exibir o processamento da pergunta.
         
         Args:
-            texto_pergunta: Texto da pergunta
+            texto_pergunta: Texto da pergunta (não utilizado diretamente)
         """
+        # Apenas adiciona uma quebra de linha para separação visual
+        print()
     
     def exibir_resposta(self, resposta, mostrar_fontes=True):
         """
@@ -146,18 +148,18 @@ class ChatPresenter:
         Args:
             chunks_relevantes: Lista de dicionários com chunks e documentos
         """
-        print(f"\n{Cores.MAGENTA}Contexto Encontrado:{Cores.RESET}")
+        print(f"{Cores.CINZA}Contexto Encontrado:{Cores.RESET}")
         
         for i, item in enumerate(chunks_relevantes):
             chunk = item["chunk"]
             documento = item["documento"]
             
-            print(f"\n{Cores.MAGENTA}[Trecho {i+1} - Fonte: {documento.arquivo_nome}]{Cores.RESET}")
+            print(f"{Cores.CINZA}[Trecho {i+1} - Fonte: {documento.arquivo_nome}]{Cores.RESET}")
             
             # Quebra o texto em linhas com largura adequada
             linhas = textwrap.wrap(chunk.chunk_texto[:200] + "...", width=self.largura_terminal)
             for linha in linhas:
-                print(linha)
+                print(f"{Cores.CINZA}{linha}{Cores.RESET}")
     
     def exibir_menu(self):
         """Exibe o menu de comandos disponíveis."""
@@ -223,7 +225,7 @@ class ChatPresenter:
             etapa: Nome da etapa
             desc: Descrição adicional
         """
-        print(f"{Cores.MAGENTA}[{etapa}]{Cores.RESET} {desc}")
+        print(f"{Cores.CINZA}[[{etapa}]] {desc}{Cores.RESET}")
         time.sleep(0.5)  # Pequena pausa para visualização do processo
     
     def limpar_tela(self):
