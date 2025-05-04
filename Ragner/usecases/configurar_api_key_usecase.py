@@ -8,6 +8,11 @@ Caso de uso: Configurar a chave de API da OpenAI.
 import os
 import subprocess
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
+
 
 class ConfigurarApiKeyUseCase:
     """
@@ -58,11 +63,11 @@ class ConfigurarApiKeyUseCase:
                     check=True,
                     text=True
                 )
-                print(f"{Cores.CINZA}Chave de API salva permanentemente nas variáveis de ambiente do usuário.{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Chave de API salva permanentemente nas variáveis de ambiente do usuário.{Cores.RESET}")
             except subprocess.CalledProcessError as e:
-                print(f"Erro ao salvar a chave de API nas variáveis de ambiente: {e}")
+                cli_logger.registrar_info(f"Erro ao salvar a chave de API nas variáveis de ambiente: {e}")
             except Exception as e:
-                print(f"Erro inesperado ao salvar a chave de API: {e}")
+                cli_logger.registrar_info(f"Erro inesperado ao salvar a chave de API: {e}")
             
         return chave_valida
     
@@ -112,8 +117,8 @@ class ConfigurarApiKeyUseCase:
             # Limpa a chave no gateway
             self.openai_gateway.configurar_api_key("")
             
-            print(f"{Cores.CINZA}Chave de API removida com sucesso das variáveis de ambiente.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Chave de API removida com sucesso das variáveis de ambiente.{Cores.RESET}")
             return True
         except Exception as e:
-            print(f"Erro ao remover a chave de API: {e}")
+            cli_logger.registrar_info(f"Erro ao remover a chave de API: {e}")
             return False

@@ -12,10 +12,9 @@ import uuid
 from domain.repositories.ChunkRepository import ChunkRepository
 from domain.Chunk import Chunk 
 from domain.Embedding import Embedding
+from domain.Log import Logger
 
 from infrastructure.database.sqlite_management import SQLiteManagement
-
-from presentation.cli.cli_cores import Cores
 
 class SQLiteChunkRepository(ChunkRepository):
     """
@@ -25,14 +24,16 @@ class SQLiteChunkRepository(ChunkRepository):
     de Chunks usando o SQLiteManagement como mecanismo de persistência.
     """
     
-    def __init__(self, db_gateway: SQLiteManagement):
+    def __init__(self, db_gateway: SQLiteManagement, logger: Logger = None):
         """
         Inicializa o repositório SQLite para Chunks.
         
         Args:
             db_gateway: Gateway para o banco de dados SQLite
+            logger: Interface opcional para logging
         """
         self.db_gateway = db_gateway
+        self.logger = logger
     
     def salvar_chunk(self, chunk: Chunk) -> Chunk:
         """
@@ -114,7 +115,8 @@ class SQLiteChunkRepository(ChunkRepository):
         """
         # Verifica se o chunk existe
         if not self.existe_chunk(chunk_id):
-            print(f"{Cores.VERMELHO}Erro: Chunk {chunk_id} não encontrado no banco de dados.{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro: Chunk {chunk_id} não encontrado no banco de dados.")
             return False
         
         # Converte o vetor para JSON para armazenamento
@@ -127,10 +129,12 @@ class SQLiteChunkRepository(ChunkRepository):
         )
         
         if resultado:
-            print(f"{Cores.CINZA}Indexando o conteúdo dos documentos - chunk_id={chunk_id}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Indexando o conteúdo dos documentos - chunk_id={chunk_id}")
             return True
         else:
-            print(f"{Cores.VERMELHO}Aviso: Não foi possível atualizar o embedding para chunk_id={chunk_id}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_erro(f"Aviso: Não foi possível atualizar o embedding para chunk_id={chunk_id}")
             return False
     
     def listar_por_arquivo(self, arquivo_uuid: str) -> List[Chunk]:

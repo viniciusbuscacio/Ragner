@@ -9,8 +9,7 @@ import os
 import sqlite3
 import logging
 from pathlib import Path
-from presentation.cli.cli_cores import Cores
-
+from domain.Log import Logger
 
 # Configuração de log personalizada para separar o que vai para o arquivo/banco do que é mostrado ao usuário
 class UserFriendlyLogFormatter(logging.Formatter):
@@ -18,17 +17,18 @@ class UserFriendlyLogFormatter(logging.Formatter):
         # Formato simplificado para exibição ao usuário (sem timestamp e nível)
         return f"{record.getMessage()}"
 
-def verificar_criar_banco(mostrar_log_usuario=True):
+def verificar_criar_banco(logger=None, mostrar_log_usuario=True):
     """
     Verifica se o banco de dados SQLite existe e está com a estrutura correta.
     Se não existir, cria o banco com as tabelas necessárias.
     
     Args:
+        logger: Interface de Logger para registro de mensagens
         mostrar_log_usuario (bool): Se True, exibe mensagens de log para o usuário
                                    em formato simplificado
     """
     # Configurar logger personalizado se solicitado
-    if mostrar_log_usuario:
+    if mostrar_log_usuario and not logger:
         # Criar handler para console com formatação amigável
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(UserFriendlyLogFormatter())
@@ -106,7 +106,8 @@ def verificar_criar_banco(mostrar_log_usuario=True):
 
     # Se o banco não existia, criar as tabelas
     if not db_existe:
-        print(f"{Cores.CINZA}Banco de dados não encontrado. Criando em: {db_path}{Cores.RESET}")
+        if logger:
+            logger.registrar_info(f"Banco de dados não encontrado. Criando em: {db_path}")
         
         for nome_tabela, sql_criacao in tabelas.items():
             cursor.execute(sql_criacao)
@@ -115,15 +116,17 @@ def verificar_criar_banco(mostrar_log_usuario=True):
 
 
     else:
-        print(f"{Cores.CINZA}Banco de dados encontrado em: {db_path}{Cores.RESET}")
-        print(f"{Cores.CINZA}Verificando banco de dados...{Cores.RESET}")
+        if logger:
+            logger.registrar_info(f"Banco de dados encontrado em: {db_path}")
+            logger.registrar_info("Verificando banco de dados...")
         
         # Verificar se todas as tabelas existem com os campos corretos
         for nome_tabela in tabelas.keys():
             # Verificar se a tabela existe
             cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{nome_tabela}'")
             if not cursor.fetchone():
-                print(f"{Cores.CINZA}Tabela {nome_tabela} não encontrada. Criando...{Cores.RESET}")
+                if logger:
+                    logger.registrar_info(f"Tabela {nome_tabela} não encontrada. Criando...")
                 
                 cursor.execute(tabelas[nome_tabela])
                 conn.commit()
@@ -149,14 +152,17 @@ def verificar_criar_banco(mostrar_log_usuario=True):
                 # Comparar colunas existentes com esperadas
                 for coluna, tipo in colunas_esperadas.items():
                     if coluna not in colunas_existentes:
-                        print(f"{Cores.CINZA}Coluna {coluna} não encontrada na tabela {nome_tabela}{Cores.RESET}")
-                        print(f"{Cores.CINZA}Coluna {coluna} ausente na tabela {nome_tabela}{Cores.RESET}")
+                        if logger:
+                            logger.registrar_erro(f"Coluna {coluna} não encontrada na tabela {nome_tabela}")
+                            logger.registrar_erro(f"Coluna {coluna} ausente na tabela {nome_tabela}")
                     elif tipo.upper() != colunas_existentes[coluna].upper():
-                        print(f"{Cores.CINZA}Tipo da coluna {coluna} na tabela {nome_tabela} não corresponde.{Cores.RESET}")
-                        print(f"{Cores.CINZA}Esperado: {tipo}, Encontrado: {colunas_existentes[coluna]}{Cores.RESET}")
-                        print(f"{Cores.CINZA}Inconsistência na coluna {coluna} da tabela {nome_tabela}{Cores.RESET}")
+                        if logger:
+                            logger.registrar_erro(f"Tipo da coluna {coluna} na tabela {nome_tabela} não corresponde.")
+                            logger.registrar_erro(f"Esperado: {tipo}, Encontrado: {colunas_existentes[coluna]}")
+                            logger.registrar_erro(f"Inconsistência na coluna {coluna} da tabela {nome_tabela}")
         
-        print(f"{Cores.CINZA}Verificação de tabelas concluída.{Cores.RESET}")
+        if logger:
+            logger.registrar_info("Verificação de tabelas concluída.")
     
     conn.close()
     return db_path

@@ -2,59 +2,62 @@
 # -*- coding: utf-8 -*-
 
 """
-TXT Loader: Carrega e processa arquivos TXT.
+TXT Loader: Carrega e processa arquivos de texto.
 """
 
 import os
-from domain.Documento import Documento
-from domain.Chunk import Chunk
-from presentation.cli.cli_cores import Cores
 
-class TxtLoader:
+class TXTLoader:
     """
-    Carrega e processa arquivos TXT.
+    Carrega e processa arquivos de texto.
     
-    Esta classe é responsável por extrair o texto de arquivos TXT
+    Esta classe é responsável por extrair o conteúdo de arquivos TXT
     e dividi-lo em chunks para processamento posterior.
     """
     
-    def __init__(self, tamanho_chunk=1000, sobreposicao=200):
+    def __init__(self, tamanho_chunk=1000, sobreposicao=200, logger=None):
         """
-        Inicializa o loader de TXT.
+        Inicializa o loader de texto.
         
         Args:
             tamanho_chunk: Tamanho aproximado de cada chunk em caracteres
             sobreposicao: Número de caracteres de sobreposição entre chunks
+            logger: Interface opcional para registrar mensagens e eventos
         """
         self.tamanho_chunk = tamanho_chunk
         self.sobreposicao = sobreposicao
+        self.logger = logger
     
     def carregar(self, caminho_arquivo):
         """
-        Carrega e processa um arquivo TXT.
+        Carrega e processa um arquivo de texto.
         
         Args:
-            caminho_arquivo: Caminho para o arquivo TXT
+            caminho_arquivo: Caminho para o arquivo de texto
             
         Returns:
-            list: Lista de textos de chunks
+            list: Lista de textos dos chunks extraídos do arquivo
             
         Raises:
             Exception: Se ocorrer um erro ao processar o arquivo
         """
         try:
-            # Lê o conteúdo do arquivo
-            with open(caminho_arquivo, 'r', encoding='utf-8', errors='ignore') as arquivo:
+            # Lê o texto do arquivo
+            with open(caminho_arquivo, 'r', encoding='utf-8') as arquivo:
                 texto_completo = arquivo.read()
             
             # Divide o texto em chunks
-            chunks_texto = self._dividir_em_chunks(texto_completo)
+            chunks = self._dividir_em_chunks(texto_completo)
             
-            print(f"{Cores.CINZA}TXT carregado: {os.path.basename(caminho_arquivo)}, {len(chunks_texto)} chunks criados{Cores.RESET}")
-            return chunks_texto
+            # Notifica sobre o processamento do arquivo usando o logger se disponível
+            if self.logger:
+                self.logger.registrar_info(f"Arquivo TXT carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos")
+            
+            return chunks
         
         except Exception as e:
-            print(f"Erro ao carregar TXT {caminho_arquivo}: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao carregar arquivo TXT {caminho_arquivo}: {str(e)}")
             raise
     
     def _dividir_em_chunks(self, texto):

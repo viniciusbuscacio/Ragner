@@ -9,7 +9,6 @@ import os
 import PyPDF2
 from domain.Documento import Documento
 from domain.Chunk import Chunk
-from presentation.cli.cli_cores import Cores
 
 class PDFLoader:
     """
@@ -19,16 +18,18 @@ class PDFLoader:
     e dividi-lo em chunks para processamento posterior.
     """
     
-    def __init__(self, tamanho_chunk=1000, sobreposicao=200):
+    def __init__(self, tamanho_chunk=1000, sobreposicao=200, logger=None):
         """
         Inicializa o loader de PDF.
         
         Args:
             tamanho_chunk: Tamanho aproximado de cada chunk em caracteres
             sobreposicao: Número de caracteres de sobreposição entre chunks
+            logger: Interface opcional para registrar mensagens e eventos
         """
         self.tamanho_chunk = tamanho_chunk
         self.sobreposicao = sobreposicao
+        self.logger = logger
     
     def carregar(self, caminho_arquivo):
         """
@@ -50,11 +51,15 @@ class PDFLoader:
             # Divide o texto em chunks
             chunks = self._dividir_em_chunks(texto_completo)
             
-            print(f"{Cores.CINZA}PDF carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos{Cores.RESET}")
+            # Notifica sobre o processamento do arquivo usando o logger se disponível
+            if self.logger:
+                self.logger.registrar_info(f"PDF carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos")
+            
             return chunks
         
         except Exception as e:
-            print(f"Erro ao carregar PDF {caminho_arquivo}: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao carregar PDF {caminho_arquivo}: {str(e)}")
             raise
     
     def _extrair_texto(self, caminho_arquivo):

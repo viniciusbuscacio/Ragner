@@ -16,11 +16,11 @@ from domain.Documento import Documento
 from domain.Chunk import Chunk
 from domain.Embedding import Embedding
 from domain.DadosRaw import DadosRaw
+from domain.Log import Logger
 from domain.repositories.ChunkRepository import ChunkRepository
 from infrastructure.file_loaders.pdf_loader import PDFLoader
-from infrastructure.file_loaders.docx_loader import DocxLoader
-from infrastructure.file_loaders.txt_loader import TxtLoader
-from presentation.cli.cli_cores import Cores
+from infrastructure.file_loaders.docx_loader import DOCXLoader
+from infrastructure.file_loaders.txt_loader import TXTLoader
 
 class IndexarDocumentosUseCase:
     """
@@ -30,7 +30,7 @@ class IndexarDocumentosUseCase:
     gerar embeddings e armazenar os chunks e embeddings no banco de dados e no FAISS.
     """
     
-    def __init__(self, db_gateway, vector_store, language_model, chunk_repository: ChunkRepository):
+    def __init__(self, db_gateway, vector_store, language_model, chunk_repository: ChunkRepository, logger: Logger = None):
         """
         Inicializa o caso de uso.
         
@@ -39,17 +39,19 @@ class IndexarDocumentosUseCase:
             vector_store: Armazenamento de vetores
             language_model: Gateway para o modelo de linguagem
             chunk_repository: Repositório de chunks
+            logger: Interface para logging (opcional)
         """
         self.db_gateway = db_gateway
         self.vector_store = vector_store
         self.language_model = language_model
         self.chunk_repository = chunk_repository
+        self.logger = logger
         
-        # Inicializa os loaders de arquivos
+        # Inicializa os loaders de arquivos, injetando o logger
         self.loaders = {
-            'pdf': PDFLoader(),
-            'docx': DocxLoader(),
-            'txt': TxtLoader()
+            'pdf': PDFLoader(logger=self.logger),
+            'docx': DOCXLoader(logger=self.logger),
+            'txt': TXTLoader(logger=self.logger)
         }
     
     def verificar_sincronizacao_faiss(self):
@@ -61,7 +63,8 @@ class IndexarDocumentosUseCase:
             bool: True se a operação foi bem-sucedida
         """
         try:
-            print(f"{Cores.CINZA}Verificando sincronização do índice FAISS com o banco de dados...{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info("Verificando sincronização do índice FAISS com o banco de dados...")
             
             # Obter estatísticas do índice FAISS
             estatisticas = self.vector_store.obter_estatisticas()
@@ -73,28 +76,34 @@ class IndexarDocumentosUseCase:
             row = cursor.fetchone()
             total_chunks_bd = row['total'] if row else 0
             
-            print(f"{Cores.CINZA}Total de embeddings no índice FAISS: {estatisticas['vetores']}{Cores.RESET}")
-            print(f"{Cores.CINZA}Total de chunks com embeddings no banco de dados: {total_chunks_bd}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Total de embeddings no índice FAISS: {estatisticas['vetores']}")
+                self.logger.registrar_info(f"Total de chunks com embeddings no banco de dados: {total_chunks_bd}")
             
             # Se o número de vetores não corresponder, reconstruir o índice
             if estatisticas['vetores'] != total_chunks_bd:
-                print(f"{Cores.CINZA}Índice FAISS não está sincronizado com o banco de dados.{Cores.RESET}")
-                print(f"{Cores.CINZA}Reconstruindo índice FAISS com base nos documentos existentes...{Cores.RESET}")
+                if self.logger:
+                    self.logger.registrar_info("Índice FAISS não está sincronizado com o banco de dados.")
+                    self.logger.registrar_info("Reconstruindo índice FAISS com base nos documentos existentes...")
                 
                 # Reconstruir o índice apenas com os documentos existentes
                 resultado = self.vector_store.reiniciar_indice_com_documentos_existentes(self.db_gateway)
                 
                 if resultado:
-                    print(f"{Cores.CINZA}Índice FAISS reconstruído com sucesso.{Cores.RESET}")
+                    if self.logger:
+                        self.logger.registrar_info("Índice FAISS reconstruído com sucesso.")
                 else:
-                    print(f"{Cores.VERMELHO}Erro ao reconstruir o índice FAISS.{Cores.RESET}")
+                    if self.logger:
+                        self.logger.registrar_erro("Erro ao reconstruir o índice FAISS.")
                 return resultado
             else:
-                print(f"{Cores.CINZA}Índice FAISS está sincronizado com o banco de dados.{Cores.RESET}")
+                if self.logger:
+                    self.logger.registrar_info("Índice FAISS está sincronizado com o banco de dados.")
                 return True
                 
         except Exception as e:
-            print(f"{Cores.VERMELHO}Erro ao verificar sincronização do índice FAISS: {str(e)}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao verificar sincronização do índice FAISS: {str(e)}")
             return False
     
     def indexar_pasta(self, pasta_documentos):
@@ -112,7 +121,8 @@ class IndexarDocumentosUseCase:
         
         if not os.path.exists(pasta_documentos):
             os.makedirs(pasta_documentos)
-            print(f"{Cores.CINZA}Pasta de documentos criada: {pasta_documentos}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Pasta de documentos criada: {pasta_documentos}")
             return 0, 0
         
         total_documentos = 0
@@ -136,8 +146,9 @@ class IndexarDocumentosUseCase:
             total_documentos += n_docs
             total_chunks += n_chunks
         
-        print(f"{Cores.CINZA}Total de documentos indexados: {total_documentos}{Cores.RESET}")
-        print(f"{Cores.CINZA}Total de chunks processados: {total_chunks}{Cores.RESET}")
+        if self.logger:
+            self.logger.registrar_info(f"Total de documentos indexados: {total_documentos}")
+            self.logger.registrar_info(f"Total de chunks processados: {total_chunks}")
         
         return total_documentos, total_chunks
     
@@ -155,10 +166,12 @@ class IndexarDocumentosUseCase:
             tipo = os.path.splitext(caminho_arquivo)[1].lower().replace('.', '')
             
             if tipo not in self.loaders:
-                print(f"{Cores.VERMELHO}Tipo de arquivo não suportado: {tipo}{Cores.RESET}")    
+                if self.logger:
+                    self.logger.registrar_erro(f"Tipo de arquivo não suportado: {tipo}")    
                 return 0, 0
             
-            print(f"{Cores.CINZA}Processando documento: {caminho_arquivo}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Processando documento: {caminho_arquivo}")
             
             # 5.1) Adicionar informações do arquivo na tabela "Arquivos"
             # Criar um novo documento com os dados do arquivo
@@ -217,7 +230,9 @@ class IndexarDocumentosUseCase:
                             conteudo_texto = str(chunks_texto)
                 except Exception as e:
                     import traceback
-                    print(traceback.format_exc())
+                    if self.logger:
+                        self.logger.registrar_erro(f"Erro ao extrair texto de {caminho_arquivo}: {str(e)}")
+                        self.logger.registrar_erro(traceback.format_exc())
                     raise
             
             # Preencher a tabela "dados_raw" com o conteúdo de texto extraído
@@ -236,10 +251,12 @@ class IndexarDocumentosUseCase:
                 data_armazenamento=dados_raw.data_armazenamento
             )
             
-            print(f"{Cores.CINZA}Conteúdo de texto de '{documento.arquivo_nome}' adicionado à tabela 'dados_raw'.{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Conteúdo de texto de '{documento.arquivo_nome}' adicionado à tabela 'dados_raw'.")
             
             # 5.3) Processar o documento para extrair chunks
-            print(f"{Cores.CINZA}Iniciando o processamento de '{documento.arquivo_nome}' para gerar chunks...{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Iniciando o processamento de '{documento.arquivo_nome}' para gerar chunks...")
             
             # Carrega o documento usando o loader apropriado para processar chunks
             chunks_texto = self.loaders[tipo].carregar(caminho_arquivo)
@@ -288,23 +305,28 @@ class IndexarDocumentosUseCase:
                     chunk.chunk_embedding = embedding
                     chunk_embeddings.append((chunk, embedding))
                 except Exception as e:
-                    print(f"{Cores.VERMELHO}Erro ao gerar embedding para chunk {i} do documento {documento.arquivo_nome}: {str(e)}{Cores.RESET}")
+                    if self.logger:
+                        self.logger.registrar_erro(f"Erro ao gerar embedding para chunk {i} do documento {documento.arquivo_nome}: {str(e)}")
                     import traceback
-                    print(traceback.format_exc())
+                    if self.logger:
+                        self.logger.registrar_erro(traceback.format_exc())
             
             # Adicionar os embeddings ao vector store
             if chunk_embeddings:
                 self.vector_store.adicionar_embeddings(chunk_embeddings)
             
-            print(f"{Cores.CINZA}{tipo.upper()} carregado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks criados{Cores.RESET}")
-            print(f"{Cores.CINZA}Documento indexado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"{tipo.upper()} carregado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks criados")
+                self.logger.registrar_info(f"Documento indexado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks")
             
             return 1, len(chunk_embeddings)
         
         except Exception as e:
-            print(f"{Cores.VERMELHO}Erro ao indexar documento {caminho_arquivo}: {str(e)}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao indexar documento {caminho_arquivo}: {str(e)}")
             import traceback
-            print(traceback.format_exc())
+            if self.logger:
+                self.logger.registrar_erro(traceback.format_exc())
             return 0, 0
     
     def verificar_arquivos_deletados(self, pasta_documentos):
@@ -319,7 +341,8 @@ class IndexarDocumentosUseCase:
             int: Número de arquivos removidos
         """
         try:
-            print(f"{Cores.CINZA}Verificando arquivos deletados...{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info("Verificando arquivos deletados...")
             
             # Listar todos os documentos no banco de dados
             arquivos = self.db_gateway.listar_arquivos_db()
@@ -347,8 +370,9 @@ class IndexarDocumentosUseCase:
                 
                 # Se o arquivo não existir mais no disco, removemos do banco de dados
                 if not os.path.exists(caminho_arquivo):
-                    print(f"{Cores.AMARELO}Arquivo não encontrado no disco: {caminho_arquivo}{Cores.RESET}")
-                    print(f"{Cores.AMARELO}Removendo do banco de dados...{Cores.RESET}")
+                    if self.logger:
+                        self.logger.registrar_info(f"Arquivo não encontrado no disco: {caminho_arquivo}")
+                        self.logger.registrar_info("Removendo do banco de dados...")
                     
                     # Remover chunks associados
                     chunks_removidos = self.chunk_repository.apagar_chunks_por_arquivo(documento.arquivo_uuid)
@@ -360,15 +384,19 @@ class IndexarDocumentosUseCase:
                     if self.db_gateway.apagar_arquivo_db(documento.arquivo_uuid):
                         arquivos_removidos += 1
                         arquivos_para_remover.append(documento)
-                        print(f"{Cores.VERDE}Arquivo removido do banco de dados: {caminho_arquivo} (e {chunks_removidos} chunks associados){Cores.RESET}")
+                        if self.logger:
+                            self.logger.registrar_info(f"Arquivo removido do banco de dados: {caminho_arquivo} (e {chunks_removidos} chunks associados)")
                     else:
-                        print(f"{Cores.VERMELHO}Erro ao remover arquivo do banco de dados: {caminho_arquivo}{Cores.RESET}")
+                        if self.logger:
+                            self.logger.registrar_erro(f"Erro ao remover arquivo do banco de dados: {caminho_arquivo}")
             
-            print(f"{Cores.CINZA}Verificação concluída. {arquivos_removidos} arquivos removidos do banco de dados.{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_info(f"Verificação concluída. {arquivos_removidos} arquivos removidos do banco de dados.")
             return arquivos_removidos
             
         except Exception as e:
-            print(f"{Cores.VERMELHO}Erro ao verificar arquivos deletados: {str(e)}{Cores.RESET}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao verificar arquivos deletados: {str(e)}")
             return 0
     
     def reindexar_tudo(self, pasta_documentos):

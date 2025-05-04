@@ -9,8 +9,13 @@ import os
 import sys
 import datetime
 from tabulate import tabulate
-from presentation.cli.cli_cores import Cores
-from presentation.cli.cli_sair  import MensagemSaida
+from Ragner.presentation.cli.cli_cores import Cores
+from Ragner.presentation.cli.cli_sair import MensagemSaida
+from Ragner.presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
+
 
 class ChatController:
     """
@@ -61,7 +66,7 @@ class ChatController:
         # Cria a pasta se não existir
         if not os.path.exists(pasta_documentos):
             os.makedirs(pasta_documentos)
-            print(f"Pasta de documentos criada em: {pasta_documentos}")
+            cli_logger.registrar_info(f"Pasta de documentos criada em: {pasta_documentos}")
         
         return pasta_documentos
     
@@ -69,18 +74,18 @@ class ChatController:
         """
         Verifica se a chave de API está configurada. Se não, solicita ao usuário.
         """
-        print(f"{Cores.CINZA}Verificando a chave da OpenAI...{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}Verificando a chave da OpenAI...{Cores.RESET}")
         
         # Verifica se a chave de API já está configurada
         if not self.configurar_api_key_usecase.obter_api_key_configurada():
-            print(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
             
             while True:
                 # Solicita a chave de API ao usuário com um prompt claro
                 api_key = input(f"{Cores.AMARELO}Digite sua chave da OpenAI (ou 'sair' para encerrar): {Cores.RESET}")
                 
                 if api_key.lower() == 'sair':
-                    print("Tchau!")
+                    cli_logger.registrar_info("Tchau!")
                     sys.exit(0)
                 
                 # Configura a chave de API
@@ -88,18 +93,18 @@ class ChatController:
                     self.presenter.exibir_mensagem_sucesso(f"{Cores.CINZA}Chave de API configurada com sucesso!{Cores.RESET}")
                     break
                 else:
-                    print(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
+                    cli_logger.registrar_info(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
         else:
             # Verifica se a chave configurada é válida
             if not self.configurar_api_key_usecase.openai_gateway.verificar_api_key():
-                print(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
                 
                 while True:
                     # Solicita uma nova chave de API ao usuário
                     api_key = input(f"{Cores.AMARELO}Digite sua chave da OpenAI (ou 'sair' para encerrar): {Cores.RESET}")
                     
                     if api_key.lower() == 'sair':
-                        print("Bye!")
+                        cli_logger.registrar_info("Bye!")
                         sys.exit(0)
                     
                     # Configura a nova chave de API
@@ -107,9 +112,9 @@ class ChatController:
                         self.presenter.exibir_mensagem_sucesso("Chave de API configurada com sucesso!")
                         break
                     else:
-                        print(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
+                        cli_logger.registrar_info(f"{Cores.CINZA}Erro ao validar a chave da OpenAI: Chave inválida{Cores.RESET}")
             else:
-                print(f"{Cores.CINZA}Chave da OpenAI validada com sucesso.{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Chave da OpenAI validada com sucesso.{Cores.RESET}")
     
     def verificar_e_indexar_documentos(self):
         """
@@ -167,14 +172,14 @@ class ChatController:
                 return
             
             # exibe o vetor para o usuário
-            print(f"\n{Cores.VERDE}Embedding para o texto: '{texto}'{Cores.RESET}")
-            print(f"{Cores.CINZA}Dimensão do vetor: {len(embedding)}{Cores.RESET}")
+            cli_logger.registrar_info(f"\n{Cores.VERDE}Embedding para o texto: '{texto}'{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Dimensão do vetor: {len(embedding)}{Cores.RESET}")
             
             # Mostrar todos os valores do embedding lado a lado, sem contador
-            print(f"\n{Cores.CINZA}Valores do embedding:{Cores.RESET}")
+            cli_logger.registrar_info(f"\n{Cores.CINZA}Valores do embedding:{Cores.RESET}")
             valores_formatados = [f"{val:.6f}" for val in embedding]
             valores_string = " ".join(valores_formatados)
-            print(valores_string)
+            cli_logger.registrar_info(valores_string)
             
         except Exception as e:
             self.presenter.exibir_mensagem_erro(f"Erro ao gerar o embedding: {str(e)}")
@@ -451,7 +456,7 @@ class ChatController:
         num_chunks = db_gateway.contar_chunks()
         
         # Exibir mensagem estatística
-        print(f"\nTemos {num_documentos} arquivo(s) indexado(s) no banco de dados, totalizando {num_chunks} chunks.")
+        cli_logger.registrar_info(f"\nTemos {num_documentos} arquivo(s) indexado(s) no banco de dados, totalizando {num_chunks} chunks.")
                
         # Preparar os dados para a tabela
         tabela_dados = []
@@ -497,7 +502,7 @@ class ChatController:
                                        tablefmt="grid", 
                                        maxcolwidths=[35, 6, 10, 8],  # Aumentado de 20 para 35
                                        numalign="right")
-            print(f"\n{tabela_formatada}")
+            cli_logger.registrar_info(f"\n{tabela_formatada}")
         except Exception as e:
             # Se houver algum problema com o tabulate, usar o formato antigo
             self.presenter.exibir_mensagem_erro(f"Erro ao formatar tabela: {str(e)}")
@@ -516,7 +521,7 @@ class ChatController:
             return
             
         # Exibir mensagem estatística
-        print(f"\nTemos {num_chunks} chunk(s) indexado(s) no banco de dados.")
+        cli_logger.registrar_info(f"\nTemos {num_chunks} chunk(s) indexado(s) no banco de dados.")
         
         # Buscar chunks no banco de dados com informações sobre os arquivos de origem
         try:
@@ -610,18 +615,18 @@ class ChatController:
                 maxcolwidths=[4, 25, 45, 28],  # Mantendo o chunk_embedding com 28 caracteres
                 stralign="left"
             )
-            print(f"\n{tabela_formatada}")
+            cli_logger.registrar_info(f"\n{tabela_formatada}")
             
             # Exibir mensagem se estamos limitando a exibição
             if tem_mais_chunks:
-                print(f"\n{Cores.CINZA}Exibindo apenas os primeiros 50 chunks de um total de {num_chunks}.{Cores.RESET}")
+                cli_logger.registrar_info(f"\n{Cores.CINZA}Exibindo apenas os primeiros 50 chunks de um total de {num_chunks}.{Cores.RESET}")
             
             # Mostrar estatísticas sobre os embeddings
             cursor.execute('SELECT COUNT(*) as total FROM Chunks WHERE chunk_embedding IS NOT NULL')
             chunks_com_embedding = cursor.fetchone()['total']
             
             porcentagem = (chunks_com_embedding / num_chunks) * 100 if num_chunks > 0 else 0
-            print(f"\n{Cores.CINZA}Chunks com embedding: {chunks_com_embedding} de {num_chunks} ({porcentagem:.1f}%){Cores.RESET}")
+            cli_logger.registrar_info(f"\n{Cores.CINZA}Chunks com embedding: {chunks_com_embedding} de {num_chunks} ({porcentagem:.1f}%){Cores.RESET}")
             
         except Exception as e:
             self.presenter.exibir_mensagem_erro(f"Erro ao recuperar informações sobre os chunks: {str(e)}")
@@ -666,13 +671,13 @@ class ChatController:
         """Solicita ao usuário uma nova chave de API e a configura."""
         import msvcrt
         
-        print("Configuração de chave de API da OpenAI")
-        print("A chave será salva nas variáveis de ambiente do usuário no Windows.")
-        print("Isso permitirá que o Ragner use a chave automaticamente nos próximos inicializações.")
-        print("Digite 'apagar' para limpar a variável de ambiente criada \"OPENAI_API_KEY\".")
-        print("Pressione ESC a qualquer momento para cancelar.")
+        cli_logger.registrar_info("Configuração de chave de API da OpenAI")
+        cli_logger.registrar_info("A chave será salva nas variáveis de ambiente do usuário no Windows.")
+        cli_logger.registrar_info("Isso permitirá que o Ragner use a chave automaticamente nos próximos inicializações.")
+        cli_logger.registrar_info("Digite 'apagar' para limpar a variável de ambiente criada \"OPENAI_API_KEY\".")
+        cli_logger.registrar_info("Pressione ESC a qualquer momento para cancelar.")
         
-        print("\nPor favor, insira sua chave de API da OpenAI: ", end="", flush=True)
+        cli_logger.registrar_info("\nPor favor, insira sua chave de API da OpenAI: ", end="", flush=True)
         
         # Captura entrada do usuário caractere por caractere para detectar ESC
         api_key = ""
@@ -682,12 +687,12 @@ class ChatController:
                 
                 # Se ESC for pressionado (código ASCII 27)
                 if ord(char) == 27:
-                    print("\nOperação cancelada pelo usuário.")
+                    cli_logger.registrar_info("\nOperação cancelada pelo usuário.")
                     return
                 
                 # Se Enter for pressionado (código ASCII 13)
                 if ord(char) == 13:  # Enter key
-                    print("")  # Nova linha após o Enter
+                    cli_logger.registrar_info("")  # Nova linha após o Enter
                     break
                 
                 # Se Backspace for pressionado (código ASCII 8)
@@ -695,12 +700,12 @@ class ChatController:
                     if api_key:
                         api_key = api_key[:-1]
                         # Efeito visual do backspace: volta um caractere e apaga
-                        print("\b \b", end="", flush=True)
+                        cli_logger.registrar_info("\b \b", end="", flush=True)
                 else:
                     # Para qualquer outro caractere, adiciona à chave e exibe
                     char_decoded = char.decode('latin-1')  # ou 'utf-8' dependendo do ambiente
                     api_key += char_decoded
-                    print(char_decoded, end="", flush=True)
+                    cli_logger.registrar_info(char_decoded, end="", flush=True)
         
         # Verifica se a entrada está vazia
         if not api_key.strip():

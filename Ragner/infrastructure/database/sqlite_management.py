@@ -8,6 +8,7 @@ SQLite Management: Fornece acesso ao banco de dados SQLite para persistência.
 import os
 import sqlite3
 from datetime import datetime
+from domain.Log import Logger
 
 class SQLiteManagement:
     """
@@ -17,12 +18,13 @@ class SQLiteManagement:
     métodos para operações básicas de CRUD em entidades do domínio.
     """
 
-    def __init__(self, db_path=None):
+    def __init__(self, db_path=None, logger=None):
         """
         Inicializa o gateway do SQLite.
 
         Args:
             db_path: Caminho para o arquivo do banco de dados
+            logger: Interface opcional para logging
         """
         if db_path is None:
             # Cria o banco de dados no mesmo diretório do script
@@ -33,6 +35,7 @@ class SQLiteManagement:
 
         self.db_path = db_path
         self.conn = None
+        self.logger = logger
 
     def get_connection(self):
         """
@@ -82,7 +85,8 @@ class SQLiteManagement:
             conn.commit()
             return arquivo_uuid
         except sqlite3.Error as e:
-            print(f"Erro técnico ao criar arquivo no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao criar arquivo no banco: {e}")
             conn.rollback()
             return None
 
@@ -151,7 +155,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao atualizar arquivo no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao atualizar arquivo no banco: {e}")
             conn.rollback()
             return False
 
@@ -172,7 +177,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar arquivo do banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar arquivo do banco: {e}")
             conn.rollback()
             return False
 
@@ -214,7 +220,8 @@ class SQLiteManagement:
             conn.commit()
             return raw_uuid
         except sqlite3.Error as e:
-            print(f"Erro técnico ao criar dados raw no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao criar dados raw no banco: {e}")
             conn.rollback()
             return None
 
@@ -271,7 +278,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao atualizar dados raw no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao atualizar dados raw no banco: {e}")
             conn.rollback()
             return False
 
@@ -292,7 +300,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar dados raw do banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar dados raw do banco: {e}")
             conn.rollback()
             return False
 
@@ -336,7 +345,8 @@ class SQLiteManagement:
             conn.commit()
             return chunk_uuid
         except sqlite3.Error as e:
-            print(f"Erro técnico ao criar chunk no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao criar chunk no banco: {e}")
             conn.rollback()
             return None
 
@@ -414,7 +424,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao atualizar chunk no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao atualizar chunk no banco: {e}")
             conn.rollback()
             return False
 
@@ -435,7 +446,8 @@ class SQLiteManagement:
             conn.commit()
             return cursor.rowcount > 0
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar chunk do banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar chunk do banco: {e}")
             conn.rollback()
             return False
 
@@ -490,7 +502,8 @@ class SQLiteManagement:
             return dict(row)
             
         except sqlite3.Error as e:
-            print(f"Erro técnico ao buscar chunk por ID: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao buscar chunk por ID: {str(e)}")
             return None
 
     # --- Métodos para operações em lote ---
@@ -513,7 +526,8 @@ class SQLiteManagement:
             conn.commit()
             return removed
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar chunks por arquivo: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar chunks por arquivo: {e}")
             conn.rollback()
             return 0
 
@@ -535,7 +549,8 @@ class SQLiteManagement:
             conn.commit()
             return removed
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar dados raw por arquivo: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar dados raw por arquivo: {e}")
             conn.rollback()
             return 0
 
@@ -556,7 +571,8 @@ class SQLiteManagement:
             conn.commit()
             return True
         except sqlite3.Error as e:
-            print(f"Erro técnico ao apagar todos os dados: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao apagar todos os dados: {e}")
             conn.rollback()
             return False
     
@@ -581,7 +597,8 @@ class SQLiteManagement:
             return result
         except Exception as e:
             conn.rollback()
-            print(f"Erro técnico na transação: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico na transação: {e}")
             return None
 
     # --- CRUD para Tabela Logs ---
@@ -611,7 +628,8 @@ class SQLiteManagement:
             conn.commit()
             return log_uuid
         except sqlite3.Error as e:
-            print(f"Erro técnico ao criar log no banco: {e}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro técnico ao criar log no banco: {e}")
             conn.rollback()
             return None
 
@@ -671,7 +689,8 @@ class SQLiteManagement:
             result = cursor.fetchone()
             return result['total'] if result else 0
         except sqlite3.Error as e:
-            print(f"Erro ao contar documentos: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao contar documentos: {str(e)}")
             return 0
     
     def listar_documentos(self):
@@ -698,5 +717,6 @@ class SQLiteManagement:
             result = cursor.fetchone()
             return result['total'] if result else 0
         except sqlite3.Error as e:
-            print(f"Erro ao contar chunks: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao contar chunks: {str(e)}")
             return 0

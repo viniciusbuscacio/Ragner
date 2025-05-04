@@ -6,29 +6,28 @@ DOCX Loader: Carrega e processa arquivos DOCX.
 """
 
 import os
-from docx import Document as DocxDocument
-from domain.Documento import Documento
-from domain.Chunk import Chunk
-from presentation.cli.cli_cores import Cores
+import docx
 
-class DocxLoader:
+class DOCXLoader:
     """
-    Carrega e processa arquivos DOCX.
+    Carrega e processa arquivos DOCX (Microsoft Word).
     
     Esta classe é responsável por extrair o texto de arquivos DOCX
     e dividi-lo em chunks para processamento posterior.
     """
     
-    def __init__(self, tamanho_chunk=1000, sobreposicao=200):
+    def __init__(self, tamanho_chunk=1000, sobreposicao=200, logger=None):
         """
         Inicializa o loader de DOCX.
         
         Args:
             tamanho_chunk: Tamanho aproximado de cada chunk em caracteres
             sobreposicao: Número de caracteres de sobreposição entre chunks
+            logger: Interface opcional para registrar mensagens e eventos
         """
         self.tamanho_chunk = tamanho_chunk
         self.sobreposicao = sobreposicao
+        self.logger = logger
     
     def carregar(self, caminho_arquivo):
         """
@@ -50,14 +49,15 @@ class DocxLoader:
             # Divide o texto em chunks
             chunks = self._dividir_em_chunks(texto_completo)
             
-            print(f"{Cores.CINZA}DOCX carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos{Cores.RESET}")
-                
+            # Notifica sobre o processamento do arquivo usando o logger se disponível
+            if self.logger:
+                self.logger.registrar_info(f"DOCX carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos")
+            
             return chunks
         
         except Exception as e:
-            print(f"Erro ao carregar DOCX {caminho_arquivo}: {str(e)}")
-            import traceback
-            print(traceback.format_exc())
+            if self.logger:
+                self.logger.registrar_erro(f"Erro ao carregar DOCX {caminho_arquivo}: {str(e)}")
             raise
     
     def _extrair_texto(self, caminho_arquivo):
@@ -70,32 +70,15 @@ class DocxLoader:
         Returns:
             str: Texto extraído do DOCX
         """
-        texto = ""
+        documento = docx.Document(caminho_arquivo)
+        texto_completo = ""
         
-        try:
-            doc = DocxDocument(caminho_arquivo)
-            
-            # Extrai texto de parágrafos
-            for paragrafo in doc.paragraphs:
-                if paragrafo.text:
-                    texto += paragrafo.text + "\n\n"
-            
-            # Extrai texto de tabelas
-            for tabela in doc.tables:
-                for linha in tabela.rows:
-                    linha_texto = []
-                    for celula in linha.cells:
-                        if celula.text:
-                            linha_texto.append(celula.text)
-                    if linha_texto:
-                        texto += " | ".join(linha_texto) + "\n"
-                texto += "\n"
+        # Extrai o texto de cada parágrafo
+        for paragrafo in documento.paragraphs:
+            if paragrafo.text.strip():
+                texto_completo += paragrafo.text + "\n\n"
         
-        except Exception as e:
-            print(f"Erro ao extrair texto do DOCX {caminho_arquivo}: {str(e)}")
-            raise
-        
-        return texto
+        return texto_completo
     
     def _dividir_em_chunks(self, texto):
         """
@@ -167,7 +150,8 @@ class DocxLoader:
                 chunks.append(chunk_atual)
             
         except Exception as e:
-            print(f"Erro na divisão em chunks: {str(e)}")
+            if self.logger:
+                self.logger.registrar_erro(f"Erro na divisão em chunks: {str(e)}")
             # Em caso de erro, retorna o texto completo como um único chunk
             chunks = [texto]
         

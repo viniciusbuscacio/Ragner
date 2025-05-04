@@ -5,7 +5,11 @@
 # Aqui, vamos criar mensagens de saída aleatórias para o usuário
 
 import random
-from presentation.cli.cli_cores import Cores
+from Ragner.presentation.cli.cli_cores import Cores
+from Ragner.presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 class MensagemSaida:
     """
@@ -75,5 +79,5 @@ class MensagemSaida:
         Exibe uma mensagem de despedida com formatação colorida.
         """
         mensagem = self.get_mensagem()
-        print(f"\n{Cores.AMARELO}{mensagem}{Cores.RESET}")
+        cli_logger.registrar_info(f"\n{Cores.AMARELO}{mensagem}{Cores.RESET}")
 

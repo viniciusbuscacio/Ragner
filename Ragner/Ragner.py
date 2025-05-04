@@ -33,24 +33,32 @@ from presentation.cli.cli_interface import CLI
 from presentation.cli.controllers import ChatController
 from presentation.cli.presenters import ChatPresenter
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_logger import CLILogger
 from presentation.cli.cli_sair  import MensagemSaida
 
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 def main():
     """
     Função principal que inicializa o Ragner Chatbot.
     """
-    print("\n" + "=" * 80)
-    print(" " * 35 + Cores.AMARELO + " Ragner Chatbot " + Cores.RESET) 
-    print("=" * 80)
+    # Exibe o cabeçalho usando o logger
+    cli_logger.registrar_info("\n" + "=" * 80)
+    cli_logger.registrar_info(" " * 35 + Cores.AMARELO + " Ragner Chatbot " + Cores.RESET)
+    cli_logger.registrar_info("=" * 80)
    
     # Inicializa gateways
-    db_gateway = SQLiteManagement()
+    db_gateway = SQLiteManagement(logger=cli_logger)
     faiss_gateway = FaissVectorStore()
     openai_gateway = OpenAIGateway()
     
     # Inicializa repositórios
-    chunk_repository = SQLiteChunkRepository(db_gateway)
+    chunk_repository = SQLiteChunkRepository(db_gateway, logger=cli_logger)
+    
+    # Inicializa presenter
+    cli_presenter = ChatPresenter(db_gateway=db_gateway)
     
     # Inicializa casos de uso
     configurar_api_key_usecase = ConfigurarApiKeyUseCase(openai_gateway)
@@ -58,14 +66,12 @@ def main():
         db_gateway=db_gateway, 
         vector_store=faiss_gateway, 
         language_model=openai_gateway,
-        chunk_repository=chunk_repository
+        chunk_repository=chunk_repository,
+        logger=cli_logger  # Injetando o logger
     )
     buscar_contexto_usecase = BuscarContextoUseCase(faiss_gateway, db_gateway)
     fazer_pergunta_usecase = FazerPerguntaUseCase()
     gerar_resposta_usecase = GerarRespostaUseCase(openai_gateway)
-    
-    # Inicializa presenter
-    cli_presenter = ChatPresenter(db_gateway=db_gateway)
     
     # Inicializa controlador
     chat_controller = ChatController(
@@ -82,14 +88,14 @@ def main():
     chat_controller.verificar_e_configurar_api_key()
     
     # Depois verifica o banco de dados
-    verificar_criar_banco()
+    verificar_criar_banco(logger=cli_logger)
     
     # Por fim, carrega os arquivos da pasta
     chat_controller.recarregar_arquivos_da_pasta()
-    print("------------------------------------------------------------")
+    cli_logger.registrar_info("------------------------------------------------------------")
     
     # Inicializa interface CLI
-    cli_interface = CLI(chat_controller, cli_presenter)
+    cli_interface = CLI(chat_controller, cli_presenter, logger=cli_logger)
     
     # Inicia a interface
     cli_interface.iniciar()
@@ -102,5 +108,8 @@ if __name__ == "__main__":
         MensagemSaida()
         sys.exit(0)
     except Exception as e:
-        print(f"\nOcorreu um erro inesperado: {str(e)}")
+        # Inicializamos um logger básico para este erro, já que o cli_logger
+        # pode não estar disponível neste ponto
+        error_logger = CLILogger()
+        error_logger.registrar_erro(f"\nOcorreu um erro inesperado: {str(e)}")
         sys.exit(1)

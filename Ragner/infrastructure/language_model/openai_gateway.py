@@ -8,6 +8,10 @@ OpenAI Gateway: Fornece acesso à API da OpenAI para geração de embeddings e r
 import os
 import json
 from openai import OpenAI
+from presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 
 class OpenAIGateway:
@@ -90,7 +94,7 @@ class OpenAIGateway:
         except Exception as e:
             # Registra o erro completo para fins de depuração, mas não o expõe
             error_message = str(e)
-            print(f"Erro interno ao gerar embedding: {error_message}")
+            cli_logger.registrar_info(f"Erro interno ao gerar embedding: {error_message}")
             
             # Lança uma exceção mais amigável sem detalhes sensíveis
             raise Exception("Não foi possível gerar embedding. Verifique sua chave de API ou conexão com a internet.")
@@ -147,7 +151,7 @@ class OpenAIGateway:
         except Exception as e:
             # Registra o erro completo para fins de depuração, mas não o expõe
             error_message = str(e)
-            print(f"Erro interno ao gerar resposta: {error_message}")
+            cli_logger.registrar_info(f"Erro interno ao gerar resposta: {error_message}")
             
             # Lança uma exceção mais amigável sem detalhes sensíveis
             raise Exception("Não foi possível gerar resposta. Verifique sua chave de API ou conexão com a internet.")

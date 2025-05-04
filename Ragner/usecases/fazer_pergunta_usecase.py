@@ -6,6 +6,10 @@ Caso de uso: Processar uma pergunta do usuário.
 """
 
 from domain.Pergunta import Pergunta
+from presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 
 class FazerPerguntaUseCase:
@@ -43,7 +47,7 @@ class FazerPerguntaUseCase:
             return pergunta, embedding
         
         except Exception as e:
-            print(f"Erro ao gerar embedding para pergunta: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao gerar embedding para pergunta: {str(e)}")
             return pergunta, None
     
     def analisar_comando(self, texto):

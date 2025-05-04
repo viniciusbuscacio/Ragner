@@ -9,6 +9,10 @@ import os
 import textwrap
 import time
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 
 class ChatPresenter:
@@ -37,7 +41,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem a ser exibida
         """
-        print(f"{mensagem}")
+        cli_logger.registrar_info(f"{mensagem}")
     
     def exibir_mensagem_erro(self, mensagem):
         """
@@ -46,7 +50,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem de erro a ser exibida
         """
-        print(f"{Cores.VERMELHO}[Erro] {mensagem}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.VERMELHO}[Erro] {mensagem}{Cores.RESET}")
     
     def exibir_mensagem_sucesso(self, mensagem):
         """
@@ -55,7 +59,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem de sucesso a ser exibida
         """
-        print(f"{Cores.VERDE}{mensagem}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.VERDE}{mensagem}{Cores.RESET}")
     
     def exibir_mensagem_info(self, mensagem):
         """
@@ -64,7 +68,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem informativa a ser exibida
         """
-        print(f"{Cores.CINZA}{mensagem}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}{mensagem}{Cores.RESET}")
 
     def exibir_mensagem_amarelo(self, mensagem):
         """
@@ -73,7 +77,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem informativa a ser exibida
         """
-        print(f"{Cores.AMARELO}{mensagem}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.AMARELO}{mensagem}{Cores.RESET}")
     
     def exibir_pergunta(self, texto_pergunta):
         """
@@ -83,7 +87,7 @@ class ChatPresenter:
             texto_pergunta: Texto da pergunta (não utilizado diretamente)
         """
         # Apenas adiciona uma quebra de linha para separação visual
-        print()
+        cli_logger.registrar_info()
     
     def exibir_resposta(self, resposta, mostrar_fontes=True):
         """
@@ -93,12 +97,12 @@ class ChatPresenter:
             resposta: Objeto Resposta
             mostrar_fontes: Se True, exibe as fontes da resposta
         """
-        print(f"\n{Cores.VERDE}Ragner: {Cores.RESET}")
+        cli_logger.registrar_info(f"\n{Cores.VERDE}Ragner: {Cores.RESET}")
         
         # Quebra o texto em linhas com largura adequada
         linhas = textwrap.wrap(resposta.texto, width=self.largura_terminal)
         for linha in linhas:
-            print(linha)
+            cli_logger.registrar_info(linha)
         
         # Mostra as fontes utilizadas, se solicitado
         if mostrar_fontes and resposta.chunks_utilizados:
@@ -129,26 +133,26 @@ class ChatPresenter:
             # Se há apenas um documento, sempre o mostra
             if len(documentos_mencionados) == 1:
                 unico_doc = list(documentos_mencionados.values())[0]
-                print(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
-                print(f"- {unico_doc['nome']}")
+                cli_logger.registrar_info(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
+                cli_logger.registrar_info(f"- {unico_doc['nome']}")
             else:
                 # Se há mais de um documento, mostra apenas os mencionados na resposta
                 docs_mencionados = [doc['nome'] for doc in documentos_mencionados.values() if doc['mencionado']]
                 
                 if docs_mencionados:
-                    print(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
+                    cli_logger.registrar_info(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
                     for nome in docs_mencionados:
-                        print(f"- {nome}")
+                        cli_logger.registrar_info(f"- {nome}")
                 else:
                     # Se nenhum documento foi explicitamente mencionado, mostra todos
-                    print(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
+                    cli_logger.registrar_info(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
                     for doc in documentos_mencionados.values():
-                        print(f"- {doc['nome']}")
+                        cli_logger.registrar_info(f"- {doc['nome']}")
                     
             # Se não temos chunks utilizados, informamos
             if not documentos_mencionados:
-                print(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
-                print("Nenhuma fonte específica utilizada.")
+                cli_logger.registrar_info(f"\n{Cores.AZUL}Fontes utilizadas:{Cores.RESET}")
+                cli_logger.registrar_info("Nenhuma fonte específica utilizada.")
     
     def exibir_contexto(self, chunks_relevantes):
         """
@@ -157,48 +161,48 @@ class ChatPresenter:
         Args:
             chunks_relevantes: Lista de dicionários com chunks e documentos
         """
-        print(f"{Cores.CINZA}Contexto Encontrado:{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}Contexto Encontrado:{Cores.RESET}")
         
         for i, item in enumerate(chunks_relevantes):
             chunk = item["chunk"]
             documento = item["documento"]
             
-            print(f"{Cores.CINZA}[Trecho {i+1} - Fonte: {documento.arquivo_nome}]{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}[Trecho {i+1} - Fonte: {documento.arquivo_nome}]{Cores.RESET}")
             
             # Quebra o texto em linhas com largura adequada
             linhas = textwrap.wrap(chunk.chunk_texto[:200] + "...", width=self.largura_terminal)
             for linha in linhas:
-                print(f"{Cores.CINZA}{linha}{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}{linha}{Cores.RESET}")
     
     def exibir_menu(self):
         """Exibe o menu de comandos disponíveis."""
-        print(f"\n{Cores.AMARELO}Comandos Disponíveis:{Cores.RESET}")
-        print("  sobre                        - Exibe informações sobre o Ragner")
-        print("  tutorial                     - Exibe um tutorial sobre como usar o Ragner")
-        print("  configurar_api_key           - Configura uma nova chave de API da OpenAI")
-        print("  status                       - Exibe o status geral do sistema")
-        print("  status_tabela_arquivos       - Exibe os arquivos indexados")
-        print("  status_tabela_chunks         - Exibe informações sobre os chunks")
-        print("  status_faiss                 - Exibe informações sobre o índice FAISS")
-        print("  recarregar_arquivos_da_pasta - Recarregar todos os arquivos da pasta 'documentos'")
-        print("  teste_vetor                  - Transforma um texto em vetor para executar um teste")
-        print("  apagar_tudo                  - Apaga todos os dados do sistema")
-        print("  menu                         - Exibe este menu de comandos")
-        print("  sair                         - Encerra o programa")
-        print(f"\n{Cores.AMARELO}Para perguntar algo, simplesmente digite sua pergunta e pressione Enter.{Cores.RESET}")
+        cli_logger.registrar_info(f"\n{Cores.AMARELO}Comandos Disponíveis:{Cores.RESET}")
+        cli_logger.registrar_info("  sobre                        - Exibe informações sobre o Ragner")
+        cli_logger.registrar_info("  tutorial                     - Exibe um tutorial sobre como usar o Ragner")
+        cli_logger.registrar_info("  configurar_api_key           - Configura uma nova chave de API da OpenAI")
+        cli_logger.registrar_info("  status                       - Exibe o status geral do sistema")
+        cli_logger.registrar_info("  status_tabela_arquivos       - Exibe os arquivos indexados")
+        cli_logger.registrar_info("  status_tabela_chunks         - Exibe informações sobre os chunks")
+        cli_logger.registrar_info("  status_faiss                 - Exibe informações sobre o índice FAISS")
+        cli_logger.registrar_info("  recarregar_arquivos_da_pasta - Recarregar todos os arquivos da pasta 'documentos'")
+        cli_logger.registrar_info("  teste_vetor                  - Transforma um texto em vetor para executar um teste")
+        cli_logger.registrar_info("  apagar_tudo                  - Apaga todos os dados do sistema")
+        cli_logger.registrar_info("  menu                         - Exibe este menu de comandos")
+        cli_logger.registrar_info("  sair                         - Encerra o programa")
+        cli_logger.registrar_info(f"\n{Cores.AMARELO}Para perguntar algo, simplesmente digite sua pergunta e pressione Enter.{Cores.RESET}")
     
     def exibir_sobre(self):
         """Exibe informações sobre o Ragner."""
-        print(f"\n{Cores.AZUL}Ragner Chatbot: Desvendando o Retrieval-Augmented Generation (RAG){Cores.RESET}")
-        print("\nO Ragner é um software educacional desenvolvido em Python para demonstrar")
-        print("de forma clara e interativa o funcionamento interno da técnica de Geração")
-        print("Aumentada por Recuperação (RAG), que combina a busca por informações")
-        print("relevantes em documentos com a geração de respostas por modelos de linguagem.")
-        print("\nCom o Ragner, você pode:")
-        print("1. Adicionar documentos em diferentes formatos (PDF, DOCX, TXT)")
-        print("2. Ver o processo de indexação e vetorização de documentos")
-        print("3. Fazer perguntas e observar como o sistema busca informações relevantes")
-        print("4. Entender como o contexto encontrado é usado para gerar respostas precisas")
+        cli_logger.registrar_info(f"\n{Cores.AZUL}Ragner Chatbot: Desvendando o Retrieval-Augmented Generation (RAG){Cores.RESET}")
+        cli_logger.registrar_info("\nO Ragner é um software educacional desenvolvido em Python para demonstrar")
+        cli_logger.registrar_info("de forma clara e interativa o funcionamento interno da técnica de Geração")
+        cli_logger.registrar_info("Aumentada por Recuperação (RAG), que combina a busca por informações")
+        cli_logger.registrar_info("relevantes em documentos com a geração de respostas por modelos de linguagem.")
+        cli_logger.registrar_info("\nCom o Ragner, você pode:")
+        cli_logger.registrar_info("1. Adicionar documentos em diferentes formatos (PDF, DOCX, TXT)")
+        cli_logger.registrar_info("2. Ver o processo de indexação e vetorização de documentos")
+        cli_logger.registrar_info("3. Fazer perguntas e observar como o sistema busca informações relevantes")
+        cli_logger.registrar_info("4. Entender como o contexto encontrado é usado para gerar respostas precisas")
     
     def exibir_tutorial(self, chat_controller=None):
         """
@@ -222,9 +226,9 @@ class ChatPresenter:
             )
             tutorial_interface.executar_tutorial()
         except ImportError:
-            print(f"{Cores.VERMELHO}Erro: O módulo de tutorial não foi encontrado.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.VERMELHO}Erro: O módulo de tutorial não foi encontrado.{Cores.RESET}")
         except Exception as e:
-            print(f"{Cores.VERMELHO}Erro ao executar o tutorial: {str(e)}{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.VERMELHO}Erro ao executar o tutorial: {str(e)}{Cores.RESET}")
     
     def exibir_processando(self, operacao):
         """
@@ -233,7 +237,7 @@ class ChatPresenter:
         Args:
             operacao: Nome da operação em andamento
         """
-        print(f"{Cores.CINZA}Processando {operacao}...{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}Processando {operacao}...{Cores.RESET}")
     
     def exibir_progresso(self, etapa, desc=""):
         """
@@ -243,9 +247,96 @@ class ChatPresenter:
             etapa: Nome da etapa
             desc: Descrição adicional
         """
-        print(f"{Cores.CINZA}[[{etapa}]] {desc}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}[[{etapa}]] {desc}{Cores.RESET}")
         time.sleep(0.5)  # Pequena pausa para visualização do processo
     
     def limpar_tela(self):
         """Limpa a tela do terminal."""
         os.system('cls' if os.name == 'nt' else 'clear')
+    
+    def exibir_titulo_tutorial(self, texto):
+        """
+        Exibe um título de seção do tutorial com formatação especial.
+        
+        Args:
+            texto: O texto do título a ser exibido
+        """
+        cli_logger.registrar_info(f"\n{Cores.AMARELO}======= {texto} ======={Cores.RESET}")
+    
+    def exibir_saudacao(self, texto):
+        """
+        Exibe uma saudação do tutorial com formatação especial.
+        
+        Args:
+            texto: O texto da saudação a ser exibido
+        """
+        cli_logger.registrar_info(f"\n{Cores.VERDE}{texto}{Cores.RESET}")
+    
+    def exibir_texto_tutorial(self, texto, destacar=None):
+        """
+        Exibe texto do tutorial com possibilidade de destacar partes.
+        
+        Args:
+            texto: Texto completo a ser exibido
+            destacar: Lista opcional de strings a serem destacadas em verde
+        """
+        if not destacar:
+            cli_logger.registrar_info(f"\n{texto}")
+            return
+            
+        # Se temos trechos para destacar, substituímos cada um deles
+        texto_formatado = texto
+        for trecho in destacar:
+            texto_formatado = texto_formatado.replace(trecho, f"{Cores.VERDE}{trecho}{Cores.RESET}")
+        
+        cli_logger.registrar_info(f"\n{texto_formatado}")
+    
+    def exibir_passo_tutorial(self, numero, texto, destacar=None):
+        """
+        Exibe um passo numerado do tutorial com possibilidade de destacar partes.
+        
+        Args:
+            numero: Número do passo
+            texto: Texto do passo a ser exibido
+            destacar: Lista opcional de strings a serem destacadas em verde
+        """
+        if not destacar:
+            cli_logger.registrar_info(f"\n{Cores.VERDE}{numero}) {Cores.RESET}{texto}")
+            return
+            
+        # Se temos trechos para destacar, substituímos cada um deles
+        texto_formatado = texto
+        for trecho in destacar:
+            texto_formatado = texto_formatado.replace(trecho, f"{Cores.VERDE}{trecho}{Cores.RESET}")
+        
+        cli_logger.registrar_info(f"\n{Cores.VERDE}{numero}) {Cores.RESET}{texto_formatado}")
+    
+    def exibir_secao_numerada(self, prefixo, titulo, texto, destacar=None):
+        """
+        Exibe uma seção numerada do tutorial com possibilidade de destacar partes.
+        
+        Args:
+            prefixo: Numeração da seção (ex: "2.1")
+            titulo: Título da seção
+            texto: Texto da seção
+            destacar: Lista opcional de strings a serem destacadas em verde
+        """
+        if not destacar:
+            cli_logger.registrar_info(f"\n{prefixo}) {titulo}: {texto}")
+            return
+            
+        # Se temos trechos para destacar, substituímos cada um deles
+        texto_formatado = texto
+        for trecho in destacar:
+            texto_formatado = texto_formatado.replace(trecho, f"{Cores.VERDE}{trecho}{Cores.RESET}")
+        
+        cli_logger.registrar_info(f"\n{prefixo}) {titulo}: {texto_formatado}")
+    
+    def exibir_texto_aguardar(self, texto):
+        """
+        Exibe texto de instrução para aguardar em cor cinza.
+        
+        Args:
+            texto: Texto de instrução para aguardar
+        """
+        cli_logger.registrar_info(f"\n{Cores.CINZA}{texto}{Cores.RESET}")

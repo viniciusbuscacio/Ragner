@@ -11,7 +11,10 @@ import numpy as np
 import pickle
 import json
 from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_logger import CLILogger
 
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 class FaissVectorStore:
     """
@@ -71,7 +74,7 @@ class FaissVectorStore:
                 self.index = faiss.IndexFlatL2(dimension)
                 self.id_to_index = {}
                 self.index_to_id = {}
-                print(f"{Cores.CINZA}Novo índice FAISS criado com dimensão {dimension}{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Novo índice FAISS criado com dimensão {dimension}{Cores.RESET}")
                 
                 # Importante: Salva o índice vazio em disco para persistência
                 self.salvar_indice()
@@ -79,7 +82,7 @@ class FaissVectorStore:
             self._initialized = True
             return True
         except Exception as e:
-            print(f"Erro ao inicializar índice FAISS: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao inicializar índice FAISS: {str(e)}")
             return False
     
     def carregar_ou_criar_indice(self, dimension=1536):
@@ -99,19 +102,19 @@ class FaissVectorStore:
                     self.index_to_id = mappings.get('index_to_id', {})
                     
                 self.index_dimension = self.index.d
-                print(f"{Cores.CINZA}Índice FAISS carregado com sucesso. Dimensão: {self.index_dimension}, Número de vetores: {self.index.ntotal}{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Índice FAISS carregado com sucesso. Dimensão: {self.index_dimension}, Número de vetores: {self.index.ntotal}{Cores.RESET}")
             else:
                 # Cria um novo índice
                 self.index_dimension = dimension
                 self.index = faiss.IndexFlatL2(dimension)
                 self.id_to_index = {}
                 self.index_to_id = {}
-                print(f"{Cores.CINZA}Novo índice FAISS criado com dimensão {dimension}{Cores.RESET}")
+                cli_logger.registrar_info(f"{Cores.CINZA}Novo índice FAISS criado com dimensão {dimension}{Cores.RESET}")
         except Exception as e:
-            print(f"Erro ao carregar o índice FAISS: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao carregar o índice FAISS: {str(e)}")
             import traceback
             traceback.print_exc()
-            print(f"{Cores.CINZA}Criando um novo índice...{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Criando um novo índice...{Cores.RESET}")
             self.index_dimension = dimension
             self.index = faiss.IndexFlatL2(dimension)
             self.id_to_index = {}
@@ -140,7 +143,7 @@ class FaissVectorStore:
             bool: True se os embeddings foram adicionados com sucesso
         """
         if not chunk_embeddings:
-            print(f"{Cores.CINZA}Nenhum embedding para adicionar.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Nenhum embedding para adicionar.{Cores.RESET}")
             return False
         
         # Verifica a dimensionalidade do primeiro embedding
@@ -166,7 +169,7 @@ class FaissVectorStore:
             chunks_to_add.append(chunk)
         
         if not embeddings_to_add:
-            print(f"{Cores.CINZA}Todos os embeddings já estão no índice.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Todos os embeddings já estão no índice.{Cores.RESET}")
             return True
         
         try:
@@ -191,11 +194,11 @@ class FaissVectorStore:
             # Salva o índice e os mapeamentos
             self.salvar_indice()
             
-            print(f"{Cores.CINZA}Adicionados {len(embeddings_to_add)} embeddings ao índice. Total: {self.index.ntotal}{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Adicionados {len(embeddings_to_add)} embeddings ao índice. Total: {self.index.ntotal}{Cores.RESET}")
             return True
         
         except Exception as e:
-            print(f"Erro ao adicionar embeddings ao índice: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao adicionar embeddings ao índice: {str(e)}")
             import traceback
             traceback.print_exc()
             return False
@@ -212,7 +215,7 @@ class FaissVectorStore:
             tuple: (IDs dos chunks, scores de similaridade)
         """
         if self.index is None or self.index.ntotal == 0:
-            print(f"{Cores.CINZA}Índice FAISS vazio ou não inicializado.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Índice FAISS vazio ou não inicializado.{Cores.RESET}")
             return [], []
         
         # Verifica se a dimensão do embedding coincide com a dimensão do índice
@@ -235,7 +238,7 @@ class FaissVectorStore:
             
             return chunk_ids, scores[0]
         except Exception as e:
-            print(f"Erro durante a busca: {str(e)}")
+            cli_logger.registrar_info(f"Erro durante a busca: {str(e)}")
             import traceback
             traceback.print_exc()
             return [], []
@@ -253,10 +256,10 @@ class FaissVectorStore:
                     'index_to_id': self.index_to_id
                 }, f)
             
-            print(f"{Cores.CINZA}Índice FAISS salvo em {self.index_path}{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Índice FAISS salvo em {self.index_path}{Cores.RESET}")
             return True
         except Exception as e:
-            print(f"Erro ao salvar o índice FAISS: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao salvar o índice FAISS: {str(e)}")
             import traceback
             traceback.print_exc()
             return False
@@ -280,7 +283,7 @@ class FaissVectorStore:
         self.id_to_index = {}
         self.index_to_id = {}
         
-        print(f"{Cores.CINZA}Índice FAISS reiniciado com dimensão {dimension}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}Índice FAISS reiniciado com dimensão {dimension}{Cores.RESET}")
         return True
     
     def reiniciar_indice_com_documentos_existentes(self, db_gateway):
@@ -307,7 +310,7 @@ class FaissVectorStore:
             
             # Se não houver chunks com embeddings, o trabalho está concluído
             if not chunks_embeddings:
-                print(f"Nenhum embedding encontrado no banco de dados. Índice FAISS vazio criado.")
+                cli_logger.registrar_info(f"Nenhum embedding encontrado no banco de dados. Índice FAISS vazio criado.")
                 return True
             
             # Lista para armazenar todos os vetores e mapeamentos
@@ -327,12 +330,12 @@ class FaissVectorStore:
                             vetores.append(vetor)
                             chunk_ids.append(chunk_uuid)
                         else:
-                            print(f"Dimensão incorreta para chunk {chunk_uuid}: esperado {dimensao}, encontrado {len(vetor)}")
+                            cli_logger.registrar_info(f"Dimensão incorreta para chunk {chunk_uuid}: esperado {dimensao}, encontrado {len(vetor)}")
                 except Exception as e:
-                    print(f"Erro ao desserializar embedding para chunk {chunk_uuid}: {str(e)}")
+                    cli_logger.registrar_info(f"Erro ao desserializar embedding para chunk {chunk_uuid}: {str(e)}")
             
             if not vetores:
-                print("Nenhum embedding válido encontrado para adicionar ao índice.")
+                cli_logger.registrar_info("Nenhum embedding válido encontrado para adicionar ao índice.")
                 return True
                 
             # Converte a lista de vetores para um array numpy
@@ -353,11 +356,11 @@ class FaissVectorStore:
             # Salva o índice e os mapeamentos
             self.salvar_indice()
             
-            print(f"{Cores.CINZA}Índice FAISS reconstruído com {len(vetores)} embeddings dos documentos existentes.{Cores.RESET}")
+            cli_logger.registrar_info(f"{Cores.CINZA}Índice FAISS reconstruído com {len(vetores)} embeddings dos documentos existentes.{Cores.RESET}")
             return True
             
         except Exception as e:
-            print(f"Erro ao reconstruir o índice FAISS: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao reconstruir o índice FAISS: {str(e)}")
             import traceback
             traceback.print_exc()
             # Em caso de erro, cria um índice vazio para não deixar o sistema inconsistente
@@ -403,7 +406,7 @@ class FaissVectorStore:
             chunk_uuids = [row['chunk_uuid'] for row in cursor.fetchall()]
             
             if not chunk_uuids:
-                print(f"Nenhum chunk encontrado para o arquivo {arquivo_uuid}")
+                cli_logger.registrar_info(f"Nenhum chunk encontrado para o arquivo {arquivo_uuid}")
                 return True
             
             # Lista para rastrear quais índices devem ser removidos
@@ -417,10 +420,10 @@ class FaissVectorStore:
                     chunk_ids_para_remover.append(chunk_uuid)
             
             if not indices_para_remover:
-                print(f"Nenhum embedding encontrado no índice FAISS para os chunks do arquivo {arquivo_uuid}")
+                cli_logger.registrar_info(f"Nenhum embedding encontrado no índice FAISS para os chunks do arquivo {arquivo_uuid}")
                 return True
             
-            print(f"Removendo {len(indices_para_remover)} embeddings do índice FAISS para o arquivo {arquivo_uuid}")
+            cli_logger.registrar_info(f"Removendo {len(indices_para_remover)} embeddings do índice FAISS para o arquivo {arquivo_uuid}")
             
             # Como o FAISS não permite remover vetores diretamente, precisamos reconstruir o índice
             # Vamos reconstruir o índice sem os vetores do arquivo excluído
@@ -467,9 +470,9 @@ class FaissVectorStore:
             # Salva o novo índice em disco
             self.salvar_indice()
             
-            print(f"Índice FAISS reconstruído com sucesso. Removidos {len(indices_para_remover)} embeddings.")
+            cli_logger.registrar_info(f"Índice FAISS reconstruído com sucesso. Removidos {len(indices_para_remover)} embeddings.")
             return True
             
         except Exception as e:
-            print(f"Erro ao remover embeddings do arquivo {arquivo_uuid}: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao remover embeddings do arquivo {arquivo_uuid}: {str(e)}")
             return False

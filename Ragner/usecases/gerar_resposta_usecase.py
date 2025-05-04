@@ -6,6 +6,10 @@ Caso de uso: Gerar resposta para uma pergunta com base no contexto.
 """
 
 from domain.Resposta import Resposta
+from presentation.cli.cli_logger import CLILogger
+
+# Inicializa o logger para a interface CLI
+cli_logger = CLILogger()
 
 
 class GerarRespostaUseCase:
@@ -77,7 +81,7 @@ class GerarRespostaUseCase:
             return resposta
         
         except Exception as e:
-            print(f"Erro ao gerar resposta: {str(e)}")
+            cli_logger.registrar_info(f"Erro ao gerar resposta: {str(e)}")
             # Retorna uma resposta de erro
             return Resposta(
                 texto=f"Desculpe, ocorreu um erro ao gerar a resposta: {str(e)}",

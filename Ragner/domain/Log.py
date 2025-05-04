@@ -3,9 +3,50 @@
 
 """
 Log: Representa um registro de log no sistema.
+Interface de Log: Define o contrato para logging na aplicação.
 """
 
 from datetime import datetime
+from abc import ABC, abstractmethod
+
+class Logger(ABC):
+    """
+    Interface abstrata para logging.
+    
+    Define o contrato que todas as implementações de logging devem seguir.
+    Seguindo o princípio da inversão de dependência da Clean Architecture,
+    as camadas internas definem interfaces que as camadas externas implementam.
+    """
+    
+    @abstractmethod
+    def registrar_info(self, mensagem):
+        """
+        Registra uma mensagem informativa.
+        
+        Args:
+            mensagem: Texto da mensagem a ser registrada
+        """
+        pass
+    
+    @abstractmethod
+    def registrar_erro(self, mensagem):
+        """
+        Registra uma mensagem de erro.
+        
+        Args:
+            mensagem: Texto da mensagem de erro a ser registrada
+        """
+        pass
+    
+    @abstractmethod
+    def registrar_debug(self, mensagem):
+        """
+        Registra uma mensagem de depuração.
+        
+        Args:
+            mensagem: Texto da mensagem de depuração a ser registrada
+        """
+        pass
 
 class Log:
     """
