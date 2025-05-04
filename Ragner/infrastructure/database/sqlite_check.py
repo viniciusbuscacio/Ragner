@@ -88,7 +88,7 @@ def verificar_criar_banco(mostrar_log_usuario=True):
                 chunk_texto TEXT,
                 chunk_numero INTEGER,
                 chunk_tamanho_tokens INTEGER,
-                chunk_embedding BLOB,
+                chunk_embedding TEXT,
                 FOREIGN KEY (arquivo_uuid) REFERENCES Arquivos(arquivo_uuid)
             )
         """,

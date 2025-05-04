@@ -181,6 +181,7 @@ class ChatPresenter:
         print("  status_tabela_chunks         - Exibe informações sobre os chunks")
         print("  status_faiss                 - Exibe informações sobre o índice FAISS")
         print("  recarregar_arquivos_da_pasta - Recarregar todos os arquivos da pasta 'documentos'")
+        print("  teste_vetor                  - Transforma um texto em vetor para executar um teste")
         print("  apagar_tudo                  - Apaga todos os dados do sistema")
         print("  menu                         - Exibe este menu de comandos")
         print("  sair                         - Encerra o programa")

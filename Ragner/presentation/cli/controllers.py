@@ -136,7 +136,50 @@ class ChatController:
             self.presenter.exibir_mensagem_sucesso(f"{Cores.CINZA}Indexação concluída: {total_docs} documentos, {total_chunks} chunks{Cores.RESET}")
         else:
             self.presenter.exibir_mensagem_info("Nenhum documento novo para indexar.")
-    
+
+    def teste_vetor(self, texto=None):
+        """
+        Cria um vetor com a palavra que o usuário digitou e o exibe os números do vetor, somente para o usuário entender
+        
+        Args:
+            texto: Texto para gerar o embedding (opcional)
+        """
+        # coleta a palavra do usuário se não foi fornecida
+        if texto is None:
+            texto = input(f"{Cores.AMARELO}Digite um texto para ver seu vetor embedding: {Cores.RESET}")
+        
+        if not texto.strip():
+            self.presenter.exibir_mensagem_info("Texto vazio. Operação cancelada.")
+            return
+        
+        try:
+            # envia para a API e coleta o vetor
+            self.presenter.exibir_processando("geração do embedding")
+            
+            # Obter o modelo de linguagem
+            language_model = self.configurar_api_key_usecase.openai_gateway
+            
+            # Gerar o embedding
+            embedding = language_model.gerar_embedding(texto)
+            
+            if embedding is None or len(embedding) == 0:
+                self.presenter.exibir_mensagem_erro("Não foi possível gerar um embedding para o texto fornecido.")
+                return
+            
+            # exibe o vetor para o usuário
+            print(f"\n{Cores.VERDE}Embedding para o texto: '{texto}'{Cores.RESET}")
+            print(f"{Cores.CINZA}Dimensão do vetor: {len(embedding)}{Cores.RESET}")
+            
+            # Mostrar todos os valores do embedding lado a lado, sem contador
+            print(f"\n{Cores.CINZA}Valores do embedding:{Cores.RESET}")
+            valores_formatados = [f"{val:.6f}" for val in embedding]
+            valores_string = " ".join(valores_formatados)
+            print(valores_string)
+            
+        except Exception as e:
+            self.presenter.exibir_mensagem_erro(f"Erro ao gerar o embedding: {str(e)}")
+   
+
     def recarregar_arquivos_da_pasta(self):
         """
         Recarrega os arquivos da pasta, verifica arquivos deletados e sincroniza o índice FAISS.
@@ -265,6 +308,9 @@ class ChatController:
             
         elif comando == "apagar_tudo":
             self._confirmar_e_apagar_tudo()
+            
+        elif comando == "teste_vetor":
+            self.teste_vetor(argumento)
             
         elif comando == "sair":
             # Removida a chamada a MensagemSaida() aqui, pois ela já é chamada no final do CLI.iniciar()
@@ -594,7 +640,7 @@ class ChatController:
     def _confirmar_e_apagar_tudo(self):
         """Solicita confirmação do usuário e apaga todos os dados."""
         self.presenter.exibir_mensagem_info("Esta operação apagará todos os dados indexados.")
-        confirmacao = input("Você tem certeza? (s/N): ").strip().lower()
+        confirmacao = input("Você tem certeza? (S/N): ").strip().lower()
         
         if confirmacao == 's':
             self.presenter.exibir_processando("limpeza de dados")
@@ -604,7 +650,7 @@ class ChatController:
                 vector_store = self.indexar_documentos_usecase.vector_store
                 
                 # Apaga todos os dados do banco de dados
-                db_gateway.apagar_tudo()
+                db_gateway.apagar_tudo_db()
                 
                 # Reinicia o índice FAISS
                 vector_store.reiniciar_indice()

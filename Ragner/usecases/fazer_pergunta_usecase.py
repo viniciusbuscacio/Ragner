@@ -62,7 +62,8 @@ class FazerPerguntaUseCase:
         comandos_simples = [
             "sobre", "tutorial", "status", "status_tabela_arquivos", 
             "status_tabela_chunks", "status_faiss", "menu", "sair",
-            "recarregar_arquivos_da_pasta", "apagar_tudo", "configurar_api_key"
+            "recarregar_arquivos_da_pasta", "apagar_tudo", "configurar_api_key",
+            "reconstruir_indice_faiss", "teste_vetor"
         ]
         
         for comando in comandos_simples:
@@ -74,6 +75,12 @@ class FazerPerguntaUseCase:
             partes = texto.split(" ", 1)
             if len(partes) > 1:
                 return True, "indice", partes[1]
+        
+        # Verificar se é o comando teste_vetor com argumento
+        if texto.startswith("teste_vetor "):
+            partes = texto.split(" ", 1)
+            if len(partes) > 1:
+                return True, "teste_vetor", partes[1]
         
         # Não é um comando
         return False, None, None
