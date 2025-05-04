@@ -353,7 +353,7 @@ class FaissVectorStore:
             # Salva o índice e os mapeamentos
             self.salvar_indice()
             
-            print(f"Índice FAISS reconstruído com {len(vetores)} embeddings dos documentos existentes.")
+            print(f"{Cores.CINZA}Índice FAISS reconstruído com {len(vetores)} embeddings dos documentos existentes.{Cores.RESET}")
             return True
             
         except Exception as e:

@@ -37,7 +37,7 @@ class ChatPresenter:
         Args:
             mensagem: Mensagem a ser exibida
         """
-        print(f"{Cores.CINZA}{mensagem}{Cores.RESET}")
+        print(f"{mensagem}")
     
     def exibir_mensagem_erro(self, mensagem):
         """
@@ -65,6 +65,15 @@ class ChatPresenter:
             mensagem: Mensagem informativa a ser exibida
         """
         print(f"{Cores.CINZA}{mensagem}{Cores.RESET}")
+
+    def exibir_mensagem_amarelo(self, mensagem):
+        """
+        Exibe uma mensagem informativa em amarelo.
+        
+        Args:
+            mensagem: Mensagem informativa a ser exibida
+        """
+        print(f"{Cores.AMARELO}{mensagem}{Cores.RESET}")
     
     def exibir_pergunta(self, texto_pergunta):
         """
@@ -171,7 +180,7 @@ class ChatPresenter:
         print("  status_tabela_arquivos       - Exibe os arquivos indexados")
         print("  status_tabela_chunks         - Exibe informações sobre os chunks")
         print("  status_faiss                 - Exibe informações sobre o índice FAISS")
-        print("  recarregar_arquivos_da_pasta - Recarrega todos os arquivos da pasta 'documentos'")
+        print("  recarregar_arquivos_da_pasta - Recarregar todos os arquivos da pasta 'documentos'")
         print("  apagar_tudo                  - Apaga todos os dados do sistema")
         print("  menu                         - Exibe este menu de comandos")
         print("  sair                         - Encerra o programa")
@@ -190,23 +199,31 @@ class ChatPresenter:
         print("3. Fazer perguntas e observar como o sistema busca informações relevantes")
         print("4. Entender como o contexto encontrado é usado para gerar respostas precisas")
     
-    def exibir_tutorial(self):
-        """Exibe um tutorial sobre como usar o Ragner."""
-        print(f"\n{Cores.AZUL}Tutorial do Ragner{Cores.RESET}")
-        print("\nComo usar o Ragner em 4 passos simples:")
-        print("\n1. Adicione documentos")
-        print("   Coloque seus arquivos (PDF, DOCX, TXT) na pasta 'documentos'")
-        print("   Você pode usar o comando 'recarregar_arquivos_da_pasta' para indexá-los")
-        print("\n2. Verifique o status")
-        print("   Use o comando 'status' para ver quantos documentos foram indexados")
-        print("   ou 'status_tabela_arquivos' para ver a lista de arquivos")
-        print("\n3. Faça perguntas")
-        print("   Simplesmente digite sua pergunta e pressione Enter")
-        print("   O Ragner mostrará o processo de busca por informações relevantes")
-        print("   e a geração da resposta baseada no contexto encontrado")
-        print("\n4. Explore comandos adicionais")
-        print("   Digite 'menu' para ver todos os comandos disponíveis")
-        print("   Experimente diferentes perguntas para entender como a RAG funciona")
+    def exibir_tutorial(self, chat_controller=None):
+        """
+        Exibe um tutorial interativo sobre como usar o Ragner.
+        
+        Args:
+            chat_controller: Controlador do chat para executar comandos durante o tutorial
+        
+        Esta função delega a execução do tutorial para a interface TutorialInterface,
+        seguindo os princípios da Clean Architecture.
+        """
+        try:
+            # Importamos aqui para evitar importação circular
+            from presentation.cli.tutorial import TutorialInterface
+            
+            # Criamos a interface e delegamos a execução do tutorial
+            tutorial_interface = TutorialInterface(
+                presenter=self, 
+                db_gateway=self.db_gateway,
+                chat_controller=chat_controller
+            )
+            tutorial_interface.executar_tutorial()
+        except ImportError:
+            print(f"{Cores.VERMELHO}Erro: O módulo de tutorial não foi encontrado.{Cores.RESET}")
+        except Exception as e:
+            print(f"{Cores.VERMELHO}Erro ao executar o tutorial: {str(e)}{Cores.RESET}")
     
     def exibir_processando(self, operacao):
         """

@@ -237,7 +237,7 @@ class ChatController:
             self.presenter.exibir_sobre()
             
         elif comando == "tutorial":
-            self.presenter.exibir_tutorial()
+            self.presenter.exibir_tutorial(chat_controller=self)
             
         elif comando == "configurar_api_key":
             self._configurar_nova_api_key()
@@ -329,12 +329,27 @@ class ChatController:
             
             # Etapa 5: Anexando chunks à pergunta que será enviada ao ChatGPT
             num_chunks = len(chunks_relevantes)
-            self.presenter.exibir_progresso("Etapa 5", f"Anexando {num_chunks} chunks à pergunta que será enviada ao ChatGPT...")
-            
-            # Se não encontrou chunks relevantes, informe o usuário
             if num_chunks == 0:
-                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A pergunta será enviada sem contexto adicional.")
+                self.presenter.exibir_progresso("Etapa 5", "Não foram encontrados chunks relevantes para a pergunta...")
+            else:
+                self.presenter.exibir_progresso("Etapa 5", f"Anexando {num_chunks} chunks à pergunta que será enviada ao ChatGPT...")
             
+            # Se não encontrou chunks relevantes, retorne uma resposta padrão
+            if num_chunks == 0:
+                from domain.Resposta import Resposta
+                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A resposta será gerada sem consulta ao modelo.")
+                
+                # Criando uma resposta padrão usando apenas parâmetros válidos
+                resposta_padrao = Resposta(
+                    texto="Desculpe, não sei como responder esta pergunta.",
+                    chunks_utilizados=[]
+                )
+                
+                # Exibe a resposta padrão
+                self.presenter.exibir_resposta(resposta_padrao)
+                return
+            
+            # Se houver chunks relevantes, continua o fluxo normal
             # Exibe o contexto encontrado
             self.presenter.exibir_contexto(chunks_relevantes)
             
@@ -465,19 +480,16 @@ class ChatController:
             SELECT 
                 c.chunk_uuid,
                 c.chunk_texto,
-                c.chunk_indice, 
-                a.arquivo_nome,
-                CASE 
-                    WHEN c.chunk_embedding IS NOT NULL THEN 'Sim' 
-                    ELSE 'Não' 
-                END as tem_embedding
+                c.chunk_numero,
+                c.chunk_embedding,
+                a.arquivo_nome
             FROM 
                 Chunks c
             JOIN 
                 Arquivos a ON c.arquivo_uuid = a.arquivo_uuid
             ORDER BY 
                 a.arquivo_nome,
-                c.chunk_indice
+                c.chunk_numero
             LIMIT 50
             """
             cursor.execute(query)
@@ -490,47 +502,73 @@ class ChatController:
             # Determinar se há mais chunks do que estamos exibindo
             tem_mais_chunks = num_chunks > 50
             
-            # Preparar os dados para a tabela
+            # Usar tabulate de forma direta para obter uma tabela mais simples
             tabela_dados = []
+            
             for chunk in chunks:
-                # Limitar o texto do chunk para exibição
-                texto_chunk = chunk['chunk_texto']
-                if len(texto_chunk) > 40:
-                    texto_chunk = texto_chunk[:37] + "..."
+                # Definir como o embedding será exibido
+                embedding_texto = "Não disponível"
+                if chunk['chunk_embedding']:
+                    try:
+                        import json
+                        if isinstance(chunk['chunk_embedding'], str):
+                            try:
+                                embedding = json.loads(chunk['chunk_embedding'])
+                            except:
+                                import re
+                                valores = re.findall(r"[-+]?\d*\.\d+|\d+", chunk['chunk_embedding'])
+                                embedding = [float(v) for v in valores[:8]] if valores else []
+                        else:
+                            embedding = chunk['chunk_embedding']
+                        
+                        if isinstance(embedding, (list, tuple)) and len(embedding) > 0:
+                            # Mantendo 8 valores do embedding com precisão completa
+                            valores = [f"{float(v)}" for v in embedding[:8]]
+                            embedding_texto = f"[{', '.join(valores)}...]"
+                        else:
+                            embedding_texto = "Formato inválido"
+                    except Exception as e:
+                        embedding_texto = "Erro ao ler"
                 
-                # Limitar o nome do arquivo
+                # Processar o nome do arquivo - limite de 25 caracteres por linha, permitindo 2 linhas no máximo
                 nome_arquivo = chunk['arquivo_nome']
-                if len(nome_arquivo) > 30:
-                    nome_arquivo = nome_arquivo[:27] + "..."
+                if len(nome_arquivo) > 50:  # Se for muito longo, trunca
+                    nome_arquivo = nome_arquivo[:47] + "..."
+                
+                # Processar o texto do chunk - limitando a extensão para evitar muitas linhas
+                texto_chunk = chunk['chunk_texto'].replace("\n", " ").strip()
+                
+                # Limitar o conteúdo a aproximadamente 100 caracteres e adicionar "..." se for maior
+                if len(texto_chunk) > 100:
+                    texto_chunk = texto_chunk[:350] + "..."
                 
                 # Adicionar à tabela
                 tabela_dados.append([
-                    chunk['chunk_indice'],
+                    chunk['chunk_numero'],
                     nome_arquivo,
                     texto_chunk,
-                    chunk['tem_embedding']
+                    embedding_texto
                 ])
             
-            # Cabeçalhos para a tabela
-            headers = ["#", "Arquivo", "Conteúdo", "Embedding"]
+            # Imprimir a tabela usando tabulate
+            from tabulate import tabulate
             
-            # Usar tabulate para formatar a tabela
-            try:
-                tabela_formatada = tabulate(tabela_dados, headers=headers, 
-                                           tablefmt="grid", 
-                                           maxcolwidths=[5, 30, 40, 9],
-                                           numalign="right")
-                print(f"\n{tabela_formatada}")
-                
-                # Exibir mensagem se estamos limitando a exibição
-                if tem_mais_chunks:
-                    print(f"\n{Cores.CINZA}Exibindo apenas os primeiros 50 chunks de um total de {num_chunks}.{Cores.RESET}")
-                
-            except Exception as e:
-                # Se houver algum problema com o tabulate, usar o formato antigo
-                self.presenter.exibir_mensagem_erro(f"Erro ao formatar tabela: {str(e)}")
-                for chunk in chunks[:10]:  # Limitar a 10 chunks se houver erro
-                    self.presenter.exibir_mensagem_info(f"- Chunk #{chunk['chunk_indice']} de '{chunk['arquivo_nome']}'")
+            # Cabeçalhos para a tabela
+            headers = ["#", "Arquivo", "Conteúdo", "chunk_embedding"]
+            
+            # Usar o formato de tabela que suporta quebras de linha limitadas
+            tabela_formatada = tabulate(
+                tabela_dados, 
+                headers=headers, 
+                tablefmt="grid", 
+                maxcolwidths=[4, 25, 45, 28],  # Mantendo o chunk_embedding com 28 caracteres
+                stralign="left"
+            )
+            print(f"\n{tabela_formatada}")
+            
+            # Exibir mensagem se estamos limitando a exibição
+            if tem_mais_chunks:
+                print(f"\n{Cores.CINZA}Exibindo apenas os primeiros 50 chunks de um total de {num_chunks}.{Cores.RESET}")
             
             # Mostrar estatísticas sobre os embeddings
             cursor.execute('SELECT COUNT(*) as total FROM Chunks WHERE chunk_embedding IS NOT NULL')
@@ -580,12 +618,58 @@ class ChatController:
     
     def _configurar_nova_api_key(self):
         """Solicita ao usuário uma nova chave de API e a configura."""
+        import msvcrt
+        
         print("Configuração de chave de API da OpenAI")
         print("A chave será salva nas variáveis de ambiente do usuário no Windows.")
         print("Isso permitirá que o Ragner use a chave automaticamente nos próximos inicializações.")
+        print("Digite 'apagar' para limpar a variável de ambiente criada \"OPENAI_API_KEY\".")
+        print("Pressione ESC a qualquer momento para cancelar.")
         
-        api_key = input("\nPor favor, insira sua chave de API da OpenAI: ")
+        print("\nPor favor, insira sua chave de API da OpenAI: ", end="", flush=True)
         
+        # Captura entrada do usuário caractere por caractere para detectar ESC
+        api_key = ""
+        while True:
+            if msvcrt.kbhit():
+                char = msvcrt.getch()
+                
+                # Se ESC for pressionado (código ASCII 27)
+                if ord(char) == 27:
+                    print("\nOperação cancelada pelo usuário.")
+                    return
+                
+                # Se Enter for pressionado (código ASCII 13)
+                if ord(char) == 13:  # Enter key
+                    print("")  # Nova linha após o Enter
+                    break
+                
+                # Se Backspace for pressionado (código ASCII 8)
+                if ord(char) == 8:  # Backspace
+                    if api_key:
+                        api_key = api_key[:-1]
+                        # Efeito visual do backspace: volta um caractere e apaga
+                        print("\b \b", end="", flush=True)
+                else:
+                    # Para qualquer outro caractere, adiciona à chave e exibe
+                    char_decoded = char.decode('latin-1')  # ou 'utf-8' dependendo do ambiente
+                    api_key += char_decoded
+                    print(char_decoded, end="", flush=True)
+        
+        # Verifica se a entrada está vazia
+        if not api_key.strip():
+            self.presenter.exibir_mensagem_info("Nenhuma chave fornecida. Operação cancelada.")
+            return
+            
+        # Verifica se o usuário quer apagar a chave existente
+        if api_key.lower() == 'apagar':
+            if self.configurar_api_key_usecase.apagar_api_key():
+                self.presenter.exibir_mensagem_sucesso("Chave de API removida com sucesso!")
+            else:
+                self.presenter.exibir_mensagem_erro("Falha ao remover a chave de API.")
+            return
+            
+        # Caso contrário, tenta configurar a nova chave
         if self.configurar_api_key_usecase.executar(api_key):
             self.presenter.exibir_mensagem_sucesso("Chave de API configurada com sucesso!")
             self.presenter.exibir_mensagem_info("A chave foi salva nas variáveis de ambiente do usuário e estará disponível em futuros inicializações do programa.")

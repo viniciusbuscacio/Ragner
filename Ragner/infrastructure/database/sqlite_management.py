@@ -560,15 +560,6 @@ class SQLiteManagement:
             conn.rollback()
             return False
     
-    def apagar_tudo(self):
-        """
-        Alias para apagar_tudo_db.
-        Mantém compatibilidade com código que não usa o sufixo _db.
-        
-        Returns:
-            bool: True se a operação foi bem-sucedida
-        """
-        return self.apagar_tudo_db()
 
     def executar_transacao_db(self, funcao_transacao):
         """

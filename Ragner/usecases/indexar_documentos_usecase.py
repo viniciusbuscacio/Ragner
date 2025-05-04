@@ -78,8 +78,8 @@ class IndexarDocumentosUseCase:
             
             # Se o número de vetores não corresponder, reconstruir o índice
             if estatisticas['vetores'] != total_chunks_bd:
-                print(f"{Cores.AMARELO}Índice FAISS não está sincronizado com o banco de dados.{Cores.RESET}")
-                print(f"{Cores.AMARELO}Reconstruindo índice FAISS com base nos documentos existentes...{Cores.RESET}")
+                print(f"{Cores.CINZA}Índice FAISS não está sincronizado com o banco de dados.{Cores.RESET}")
+                print(f"{Cores.CINZA}Reconstruindo índice FAISS com base nos documentos existentes...{Cores.RESET}")
                 
                 # Reconstruir o índice apenas com os documentos existentes
                 resultado = self.vector_store.reiniciar_indice_com_documentos_existentes(self.db_gateway)
@@ -159,7 +159,6 @@ class IndexarDocumentosUseCase:
                 return 0, 0
             
             print(f"{Cores.CINZA}Processando documento: {caminho_arquivo}{Cores.RESET}")
-            print(f"DEBUG-INDEXAR: Iniciando indexação de documento tipo {tipo}")
             
             # 5.1) Adicionar informações do arquivo na tabela "Arquivos"
             # Criar um novo documento com os dados do arquivo
@@ -196,8 +195,6 @@ class IndexarDocumentosUseCase:
                 data_indexacao=time.time()
             )
             
-            print(f"DEBUG-INDEXAR: Documento salvo no BD com UUID: {arquivo_uuid}")
-            
             # 5.2) Extrair o conteúdo de texto do arquivo
             conteudo_texto = ""
             
@@ -205,33 +202,23 @@ class IndexarDocumentosUseCase:
             if tipo == "txt":
                 with open(caminho_arquivo, 'r', encoding='utf-8', errors='ignore') as f:
                     conteudo_texto = f.read()
-                print(f"DEBUG-INDEXAR: Arquivo TXT lido diretamente, {len(conteudo_texto)} caracteres")
             else:
                 # Para outros tipos de arquivo (PDF, DOCX), usamos o loader para extrair o texto
-                print(f"DEBUG-INDEXAR: Chamando o loader para o tipo {tipo}")
                 try:
                     chunks_texto = self.loaders[tipo].carregar(caminho_arquivo)
-                    print(f"DEBUG-INDEXAR: Loader retornou {type(chunks_texto)} com {len(chunks_texto) if chunks_texto else 0} itens")
                     
                     # Verificar o que foi retornado pelo loader
                     if isinstance(chunks_texto, list):
-                        print(f"DEBUG-INDEXAR: Loader retornou uma lista")
                         conteudo_texto = "\n\n".join(chunks_texto)
                     else:
-                        print(f"DEBUG-INDEXAR: Loader retornou um objeto do tipo {type(chunks_texto).__name__}")
                         if hasattr(chunks_texto, 'chunks'):
-                            print(f"DEBUG-INDEXAR: O objeto tem um atributo 'chunks' com {len(chunks_texto.chunks)} itens")
                             conteudo_texto = "\n\n".join([chunk.chunk_texto for chunk in chunks_texto.chunks])
                         else:
                             conteudo_texto = str(chunks_texto)
-                            print(f"DEBUG-INDEXAR: Usando o objeto convertido para string: {len(conteudo_texto)} caracteres")
                 except Exception as e:
-                    print(f"DEBUG-INDEXAR: ERRO ao chamar o loader: {str(e)}")
                     import traceback
                     print(traceback.format_exc())
                     raise
-            
-            print(f"DEBUG-INDEXAR: Conteúdo texto extraído: {len(conteudo_texto)} caracteres")
             
             # Preencher a tabela "dados_raw" com o conteúdo de texto extraído
             dados_raw = DadosRaw(
@@ -255,25 +242,19 @@ class IndexarDocumentosUseCase:
             print(f"{Cores.CINZA}Iniciando o processamento de '{documento.arquivo_nome}' para gerar chunks...{Cores.RESET}")
             
             # Carrega o documento usando o loader apropriado para processar chunks
-            print(f"DEBUG-INDEXAR: Chamando novamente o loader para obter chunks")
             chunks_texto = self.loaders[tipo].carregar(caminho_arquivo)
-            print(f"DEBUG-INDEXAR: Loader retornou {len(chunks_texto) if chunks_texto else 0} chunks")
             
             # Verificar o tipo do retorno
             if not isinstance(chunks_texto, list):
-                print(f"DEBUG-INDEXAR: ATENÇÃO - O loader não retornou uma lista, mas um {type(chunks_texto).__name__}")
                 # Tentativa de converter para lista se não for uma lista
                 if hasattr(chunks_texto, 'chunks'):
                     chunks_texto = [chunk.chunk_texto for chunk in chunks_texto.chunks]
-                    print(f"DEBUG-INDEXAR: Convertido para lista de {len(chunks_texto)} strings")
                 else:
                     chunks_texto = [str(chunks_texto)]
-                    print(f"DEBUG-INDEXAR: Convertido para lista com um único item")
             
             # Processar os chunks
             chunk_embeddings = []
             for i, texto_chunk in enumerate(chunks_texto):
-                print(f"DEBUG-INDEXAR: Processando chunk {i}, tamanho {len(texto_chunk)} caracteres")
                 
                 # Criar um objeto Chunk
                 chunk = Chunk(
@@ -287,14 +268,11 @@ class IndexarDocumentosUseCase:
                 # Salvar o chunk no banco de dados usando o repositório
                 try:
                     chunk = self.chunk_repository.salvar_chunk(chunk)
-                    print(f"DEBUG-INDEXAR: Chunk {i} salvo no BD com UUID: {chunk.chunk_uuid}")
                 except Exception as e:
-                    print(f"DEBUG-INDEXAR: ERRO ao salvar chunk {i}: {str(e)}")
                     continue
                 
                 # Gerar o embedding para o chunk
                 try:
-                    print(f"DEBUG-INDEXAR: Gerando embedding para chunk {i}")
                     vetor = self.language_model.gerar_embedding(chunk.chunk_texto)
                     embedding = Embedding(
                         id=str(uuid.uuid4()),
@@ -309,19 +287,14 @@ class IndexarDocumentosUseCase:
                     # Adicionar à lista para o vector store
                     chunk.chunk_embedding = embedding
                     chunk_embeddings.append((chunk, embedding))
-                    print(f"DEBUG-INDEXAR: Embedding gerado para chunk {i}")
                 except Exception as e:
                     print(f"{Cores.VERMELHO}Erro ao gerar embedding para chunk {i} do documento {documento.arquivo_nome}: {str(e)}{Cores.RESET}")
-                    print(f"DEBUG-INDEXAR: ERRO no embedding: {str(e)}")
                     import traceback
                     print(traceback.format_exc())
             
             # Adicionar os embeddings ao vector store
             if chunk_embeddings:
-                print(f"DEBUG-INDEXAR: Adicionando {len(chunk_embeddings)} embeddings ao vector store")
                 self.vector_store.adicionar_embeddings(chunk_embeddings)
-            else:
-                print(f"DEBUG-INDEXAR: ATENÇÃO - Nenhum embedding foi gerado!")
             
             print(f"{Cores.CINZA}{tipo.upper()} carregado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks criados{Cores.RESET}")
             print(f"{Cores.CINZA}Documento indexado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks{Cores.RESET}")
@@ -331,7 +304,7 @@ class IndexarDocumentosUseCase:
         except Exception as e:
             print(f"{Cores.VERMELHO}Erro ao indexar documento {caminho_arquivo}: {str(e)}{Cores.RESET}")
             import traceback
-            print(f"DEBUG-INDEXAR: Traceback completo:\n{traceback.format_exc()}")
+            print(traceback.format_exc())
             return 0, 0
     
     def verificar_arquivos_deletados(self, pasta_documentos):

@@ -86,3 +86,34 @@ class ConfigurarApiKeyUseCase:
             return True
             
         return False
+    
+    def apagar_api_key(self):
+        """
+        Remove a chave de API da OpenAI das variáveis de ambiente.
+        Também limpa a chave do gateway.
+        
+        Returns:
+            bool: True se a operação foi bem-sucedida
+        """
+        try:
+            # Remove a variável de ambiente da sessão atual
+            if "OPENAI_API_KEY" in os.environ:
+                del os.environ["OPENAI_API_KEY"]
+            
+            # Remove a variável de ambiente permanente usando o comando setx com string vazia
+            subprocess.run(
+                ['setx', 'OPENAI_API_KEY', ''], 
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                text=True
+            )
+            
+            # Limpa a chave no gateway
+            self.openai_gateway.configurar_api_key("")
+            
+            print(f"{Cores.CINZA}Chave de API removida com sucesso das variáveis de ambiente.{Cores.RESET}")
+            return True
+        except Exception as e:
+            print(f"Erro ao remover a chave de API: {e}")
+            return False
