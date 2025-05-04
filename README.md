@@ -1,5 +1,7 @@
 # Ragner Chatbot: Desvendando o Retrieval-Augmented Generation (RAG)
 
+> **Status: COMPLETO** - Versão 1.0 - Maio 2025
+
 ## Objetivo
 
 Este software educacional, desenvolvido em Python, tem como objetivo demonstrar de forma clara e interativa o funcionamento interno da técnica de Geração Aumentada por Recuperação (RAG). Através de uma interface de linha de comando (CLI), usuários, especialmente estudantes de tecnologia, poderão acompanhar cada etapa do processo, desde a indexação de documentos até a geração de respostas contextualizadas por uma Inteligência Artificial.
@@ -28,6 +30,7 @@ O projeto segue uma arquitetura limpa (Clean Architecture) com separação clara
     * Recarregar arquivos da pasta de documentos (`recarregar_arquivos_da_pasta`).
     * Apagar todos os dados do chatbot (`apagar_tudo`).
     * Sair do programa (`sair`).
+* **Testes Automatizados:** Suite completa de testes unitários para garantir a robustez e confiabilidade do sistema.
 
 ## Como Utilizar
 
@@ -60,6 +63,12 @@ O projeto segue uma arquitetura limpa (Clean Architecture) com separação clara
    * Para acessar o menu de opções, digite `menu` e pressione Enter.
    * Para sair do programa, digite `sair` e pressione Enter.
 
+6. **Executando os Testes:**
+   * Para verificar a integridade do sistema, execute os testes automatizados:
+     ```powershell
+     python run_tests.py
+     ```
+
 ## Funcionamento Interno e Metodologia
 
 Este software implementa as seguintes etapas para demonstrar o funcionamento da técnica RAG:
@@ -82,6 +91,7 @@ Este software implementa as seguintes etapas para demonstrar o funcionamento da 
 * **python-docx:** Para leitura de arquivos DOC e DOCX.
 * **SQLAlchemy:** Para interação com o SQLite.
 * **PyCryptodome:** Para operações de criptografia.
+* **Pytest:** Framework para testes automatizados.
 
 ## Estrutura do Projeto
 
@@ -91,16 +101,36 @@ Ragner/
 │   ├── Chunk.py        # Representação de fragmentos de texto
 │   ├── Documento.py    # Representação de documentos
 │   ├── Embedding.py    # Representação de vetores de embedding
+│   ├── DadosRaw.py     # Representação de dados brutos
+│   ├── Log.py          # Sistema de logging
+│   ├── Pergunta.py     # Representação de perguntas do usuário
+│   ├── Resposta.py     # Representação de respostas geradas
 │   └── ...
 ├── infrastructure/     # Implementações concretas
 │   ├── database/       # Acesso ao banco de dados SQLite
 │   ├── file_loaders/   # Carregadores de diferentes tipos de arquivo
 │   ├── language_model/ # Interface com a API OpenAI
+│   ├── repositories/   # Implementação de repositórios
 │   └── vector_store/   # Interface com o FAISS
 ├── presentation/       # Interface com o usuário
 │   └── cli/            # Interface de linha de comando
 └── usecases/           # Regras de negócio e casos de uso
+    ├── buscar_contexto_usecase.py
+    ├── configurar_api_key_usecase.py
+    ├── fazer_pergunta_usecase.py
+    ├── gerar_resposta_usecase.py
+    ├── indexar_documentos_usecase.py
+    └── tutorial_usecase.py
+tests/                  # Testes automatizados
+    ├── test_buscar_contexto_usecase.py
+    ├── test_chat_controller.py
+    ├── test_cli_interface.py
+    └── ...
 ```
+
+## Estado Atual do Projeto
+
+O projeto Ragner Chatbot está agora completo e totalmente funcional. Todas as funcionalidades planejadas foram implementadas e testadas extensivamente. O sistema pode ser utilizado como uma ferramenta educacional eficaz para compreender os conceitos e o funcionamento do RAG.
 
 ## Para Aprender Mais
 
