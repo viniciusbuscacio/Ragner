@@ -27,11 +27,17 @@ class SQLiteManagement:
             logger: Interface opcional para logging
         """
         if db_path is None:
-            # Cria o banco de dados no mesmo diretório do script
+            # Cria o banco de dados no mesmo nível da pasta faiss_index
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            # Volta dois níveis para chegar ao diretório raiz do projeto (adapte conforme sua estrutura)
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
-            db_path = os.path.join(project_root, 'Ragner', 'infrastructure', 'database', 'database.sqlite3')
+            # Volta três níveis para chegar ao diretório raiz do projeto (um nível acima da pasta Ragner)
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+            
+            # Cria o diretório database se não existir
+            database_dir = os.path.join(project_root, 'database')
+            if not os.path.exists(database_dir):
+                os.makedirs(database_dir)
+            
+            db_path = os.path.join(database_dir, 'database.sqlite3')
 
         self.db_path = db_path
         self.conn = None

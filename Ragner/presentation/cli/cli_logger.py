@@ -16,7 +16,7 @@ class CLILogger(Logger):
     recursos de apresentação (cores no terminal) na saída.
     """
     
-    def registrar_info(self, mensagem):
+    def registrar_info(self, mensagem=""):
         """
         Registra e exibe uma mensagem informativa no terminal.
         

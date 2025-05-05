@@ -8,3 +8,6 @@ __pycache__/
 .Python
 .pytest_cache/
 database.sqlite3
+build/
+dist/
+

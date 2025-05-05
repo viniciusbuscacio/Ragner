@@ -9,9 +9,9 @@ import os
 import sys
 import datetime
 from tabulate import tabulate
-from Ragner.presentation.cli.cli_cores import Cores
-from Ragner.presentation.cli.cli_sair import MensagemSaida
-from Ragner.presentation.cli.cli_logger import CLILogger
+from presentation.cli.cli_cores import Cores
+from presentation.cli.cli_sair import MensagemSaida
+from presentation.cli.cli_logger import CLILogger
 
 # Inicializa o logger para a interface CLI
 cli_logger = CLILogger()

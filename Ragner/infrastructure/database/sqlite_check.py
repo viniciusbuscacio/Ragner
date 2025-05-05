@@ -48,8 +48,17 @@ def verificar_criar_banco(logger=None, mostrar_log_usuario=True):
         user_logger = logging.getLogger('null_logger')
         user_logger.addHandler(logging.NullHandler())
     
-    # Definir o caminho do banco de dados
-    db_path = Path(__file__).parent / "database.sqlite3"
+    # Definir o caminho do banco de dados - agora no diretório raiz do projeto
+    # Caminho relativo para voltar ao diretório raiz do projeto e acessar a pasta 'database'
+    current_dir = Path(__file__).parent
+    project_root = current_dir.parent.parent.parent.parent  # Quatro níveis acima
+    
+    # Criar o diretório database se não existir
+    database_dir = project_root / 'database'
+    if not os.path.exists(database_dir):
+        os.makedirs(database_dir)
+    
+    db_path = database_dir / 'database.sqlite3'
     
     # Verificar se o arquivo existe
     db_existe = os.path.exists(db_path)
