@@ -8,14 +8,17 @@ SQLite Check: Verifica se o banco de dados SQLite está acessível e funcional.
 import os
 import sqlite3
 import logging
+import sys
 from pathlib import Path
 from domain.Log import Logger
+
+# Importar o PathsManager
+from infrastructure.utils.paths_manager import PathsManager
 
 # Configuração de log personalizada para separar o que vai para o arquivo/banco do que é mostrado ao usuário
 class UserFriendlyLogFormatter(logging.Formatter):
     def format(self, record):
-        # Formato simplificado para exibição ao usuário (sem timestamp e nível)
-        return f"{record.getMessage()}"
+        return record.getMessage()
 
 def verificar_criar_banco(logger=None, mostrar_log_usuario=True):
     """
@@ -42,23 +45,16 @@ def verificar_criar_banco(logger=None, mostrar_log_usuario=True):
             user_logger.removeHandler(handler)
         
         user_logger.addHandler(console_handler)
+        
         # Não propagar para o logger raiz (que tem o formato completo)
         user_logger.propagate = False
     else:
         user_logger = logging.getLogger('null_logger')
         user_logger.addHandler(logging.NullHandler())
     
-    # Definir o caminho do banco de dados - agora no diretório raiz do projeto
-    # Caminho relativo para voltar ao diretório raiz do projeto e acessar a pasta 'database'
-    current_dir = Path(__file__).parent
-    project_root = current_dir.parent.parent.parent.parent  # Quatro níveis acima
-    
-    # Criar o diretório database se não existir
-    database_dir = project_root / 'database'
-    if not os.path.exists(database_dir):
-        os.makedirs(database_dir)
-    
-    db_path = database_dir / 'database.sqlite3'
+    # Obter o caminho do banco de dados do PathsManager
+    paths_manager = PathsManager()
+    db_path = paths_manager.database_path
     
     # Verificar se o arquivo existe
     db_existe = os.path.exists(db_path)

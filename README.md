@@ -43,7 +43,7 @@ O projeto segue uma arquitetura limpa (Clean Architecture) com separação clara
    * Para executar (no PowerShell):
      ```powershell
      git clone https://github.com/viniciusbuscacio/Ragner.git
-     cd Ragner3
+     cd Ragner
      python -m venv venv
      .\venv\Scripts\activate
      python -m pip install -r requirements.txt

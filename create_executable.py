@@ -53,8 +53,16 @@ def main():
         '--exclude-module=IPython',
         '--exclude-module=tkinter',
         '--exclude-module=PySide2',
+        # Adiciona um diretório de banco de dados vazio para ser incluído na distribuição
+        '--add-data=database;database',  # Inclui o diretório database (se existir)
         'Ragner/Ragner.py'             # Script principal
     ]
+    
+    # Cria um diretório database vazio para ser incluído (se ainda não existir)
+    database_dir = os.path.join(projeto_dir, 'database')
+    if not os.path.exists(database_dir):
+        os.makedirs(database_dir)
+        print(f"Diretório de banco de dados criado em: {database_dir}")
     
     # Executa o comando do PyInstaller
     try:

@@ -5,7 +5,7 @@ a = Analysis(
     ['Ragner\\Ragner.py'],
     pathex=[],
     binaries=[],
-    datas=[('Ragner', 'Ragner'), ('documentos', 'documentos'), ('faiss_index', 'faiss_index')],
+    datas=[('Ragner', 'Ragner'), ('documentos', 'documentos'), ('faiss_index', 'faiss_index'), ('database', 'database')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

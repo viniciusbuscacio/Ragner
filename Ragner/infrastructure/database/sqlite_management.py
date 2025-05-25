@@ -9,6 +9,11 @@ import os
 import sqlite3
 from datetime import datetime
 from domain.Log import Logger
+import sys
+from pathlib import Path
+
+# Import PathsManager
+from infrastructure.utils.paths_manager import PathsManager
 
 class SQLiteManagement:
     """
@@ -27,17 +32,15 @@ class SQLiteManagement:
             logger: Interface opcional para logging
         """
         if db_path is None:
-            # Cria o banco de dados no mesmo nível da pasta faiss_index
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            # Volta três níveis para chegar ao diretório raiz do projeto (um nível acima da pasta Ragner)
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
-            
-            # Cria o diretório database se não existir
-            database_dir = os.path.join(project_root, 'database')
-            if not os.path.exists(database_dir):
-                os.makedirs(database_dir)
-            
-            db_path = os.path.join(database_dir, 'database.sqlite3')
+            # Obtém o caminho do banco de dados do PathsManager
+            paths_manager = PathsManager()
+            db_path = paths_manager.database_path
+            if logger:
+                logger.registrar_info(f"Usando banco de dados: {db_path}")
+
+        # Verifica e registra o caminho final do banco de dados
+        if logger:
+            logger.registrar_info(f"Caminho do banco de dados: {db_path}")
 
         self.db_path = db_path
         self.conn = None
