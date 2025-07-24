@@ -49,10 +49,54 @@ def main():
     cli_logger.registrar_info(" " * 35 + Cores.AMARELO + " Ragner Chatbot " + Cores.RESET)
     cli_logger.registrar_info("=" * 80)
    
-    # Inicializa gateways
+    # Inicializa apenas o gateway OpenAI para verificação da chave primeiro
+    openai_gateway = OpenAIGateway()
+    configurar_api_key_usecase = ConfigurarApiKeyUseCase(openai_gateway)
+    
+    # PRIMEIRA VERIFICAÇÃO: Chave da OpenAI (essencial para funcionamento)
+    cli_logger.registrar_info(f"{Cores.CINZA}Verificando a chave da OpenAI...{Cores.RESET}")
+    
+    # Verifica se a chave de API já está configurada
+    if not configurar_api_key_usecase.obter_api_key_configurada():
+        cli_logger.registrar_info(f"{Cores.AMARELO}Chave da OpenAI não encontrada.{Cores.RESET}")
+        
+        while True:
+            # Solicita a chave de API ao usuário
+            api_key = input(f"{Cores.AMARELO}Digite sua chave da OpenAI (ou 'sair' para encerrar): {Cores.RESET}")
+            
+            if api_key.lower() == 'sair':
+                cli_logger.registrar_info("Tchau!")
+                sys.exit(0)
+            
+            # Configura a chave de API
+            if configurar_api_key_usecase.executar(api_key):
+                cli_logger.registrar_info(f"{Cores.CINZA}Chave da OpenAI validada com sucesso.{Cores.RESET}")
+                break
+            else:
+                cli_logger.registrar_info(f"{Cores.VERMELHO}Chave da OpenAI inválida. Tente novamente.{Cores.RESET}")
+    else:
+        # Verifica se a chave configurada é válida
+        if not openai_gateway.verificar_api_key():
+            cli_logger.registrar_info(f"{Cores.AMARELO}Chave da OpenAI encontrada mas é inválida.{Cores.RESET}")
+            
+            while True:
+                api_key = input(f"{Cores.AMARELO}Digite sua chave da OpenAI (ou 'sair' para encerrar): {Cores.RESET}")
+                
+                if api_key.lower() == 'sair':
+                    cli_logger.registrar_info("Tchau!")
+                    sys.exit(0)
+                
+                if configurar_api_key_usecase.executar(api_key):
+                    cli_logger.registrar_info(f"{Cores.CINZA}Chave da OpenAI validada com sucesso.{Cores.RESET}")
+                    break
+                else:
+                    cli_logger.registrar_info(f"{Cores.VERMELHO}Chave da OpenAI inválida. Tente novamente.{Cores.RESET}")
+        else:
+            cli_logger.registrar_info(f"{Cores.CINZA}Chave da OpenAI validada com sucesso.{Cores.RESET}")
+   
+    # Agora inicializa outros gateways
     db_gateway = SQLiteManagement(logger=cli_logger)
     faiss_gateway = FaissVectorStore()
-    openai_gateway = OpenAIGateway()
     
     # Inicializa repositórios
     chunk_repository = SQLiteChunkRepository(db_gateway, logger=cli_logger)
@@ -61,7 +105,6 @@ def main():
     cli_presenter = ChatPresenter(db_gateway=db_gateway)
     
     # Inicializa casos de uso
-    configurar_api_key_usecase = ConfigurarApiKeyUseCase(openai_gateway)
     indexar_documentos_usecase = IndexarDocumentosUseCase(
         db_gateway=db_gateway, 
         vector_store=faiss_gateway, 
@@ -83,11 +126,10 @@ def main():
         presenter=cli_presenter
     )
     
-    # Executa as verificações iniciais
-    # Primeiro verifica a chave da OpenAI
-    chat_controller.verificar_e_configurar_api_key()
+    # Executa as verificações restantes
+    # A chave da OpenAI já foi verificada no início
     
-    # Depois verifica o banco de dados
+    # Verifica o banco de dados
     verificar_criar_banco(logger=cli_logger)
     
     # Por fim, carrega os arquivos da pasta

@@ -1,13 +1,54 @@
-documentos/
+# Diretórios de build e distribuição
+build/
+dist/
+
+# Dados e cache do sistema
+database/
 faiss_index/
+documentos/
+
+# Ambiente Python
 venv/
+env/
+.venv/
+.env/
 __pycache__/
+.pytest_cache/
+
+# Arquivos Python compilados
 *.pyc
 *.pyo
 *.pyd
+*.pdb
 .Python
-.pytest_cache/
-database.sqlite3
-build/
-dist/
+
+# Banco de dados
+*.sqlite3
+*.db
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de configuração sensíveis
+.env
+*.key
+config.ini
+
+# Arquivos específicos do Windows
+desktop.ini
+
 

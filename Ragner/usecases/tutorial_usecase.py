@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#./usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -7,7 +7,6 @@ Use Case de Tutorial: Implementa a lógica de negócio do tutorial interativo do
 
 import os
 import time
-import keyboard
 
 
 class TutorialUseCase:
@@ -40,41 +39,42 @@ class TutorialUseCase:
         Esta é a função principal que orquestra todos os passos do tutorial.
         """
         try:
-            # Passo 1: Boas-vindas e introdução
-            self._exibir_boas_vindas()
+            # Página inicial: Boas-vindas e visão geral dos 5 passos
+            if not self._exibir_boas_vindas():
+                return
+                
+            # Passo 1 detalhado: Documentos → Blocos
+            if not self._exibir_processo_indexacao():
+                return
+                
+            # Passo 2 detalhado: Blocos → Números (Vetorização)
+            self._exibir_vetorizacao()
             if not self._aguardar_tecla():
                 return
                 
-            # Passo 2: A chave da OpenAI e a conexão inteligente
-            self._exibir_chave_api()
-            if not self._aguardar_tecla():
-                return
-                
-            # Passo 3: O processo de "entendimento" dos arquivos
-            self._exibir_processo_indexacao()
-            if not self._aguardar_tecla():
-                return
-                
-            # Passo 4: A magia da busca: vetores e o índice FAISS
+            # Passo 3 detalhado: Pergunta → Números
             self._exibir_busca_vetorial()
+                
+            # Passo 4 detalhado: Comparação Matemática
+            self._exibir_comparacao_matematica()
             if not self._aguardar_tecla():
                 return
                 
-            # Passo 5: Pronto para as perguntas: encontrando a resposta
+            # Passo 5 detalhado: ChatGPT Responde
             self._exibir_perguntas_respostas()
             if not self._aguardar_tecla():
                 return
                 
-            # Passo 6: Explore e aprenda!
+            # Conclusão: Explore e aprenda.
             self._exibir_exploracao()
-            self._aguardar_tecla("Pressione qualquer tecla para retornar ao programa principal...")
+            self._aguardar_tecla("Pressione Enter para retornar ao programa principal...")
             
         except Exception as e:
             self.presenter.exibir_mensagem_erro(f"Erro durante o tutorial: {str(e)}")
-            self.presenter.exibir_mensagem_sistema("Pressione qualquer tecla para voltar ao programa principal...")
-            keyboard.read_event()
+            self.presenter.exibir_mensagem_sistema("Pressione Enter para voltar ao programa principal...")
+            input()
     
-    def _aguardar_tecla(self, mensagem="Pressione qualquer tecla para continuar ou ESC para sair..."):
+    def _aguardar_tecla(self, mensagem="Pressione Enter para continuar ou digite 'sair' para encerrar"):
         """
         Aguarda que o usuário pressione uma tecla.
         
@@ -82,162 +82,281 @@ class TutorialUseCase:
             mensagem: Mensagem a ser exibida antes de aguardar a tecla
             
         Returns:
-            bool: True se o usuário quer continuar, False se quer sair (tecla ESC)
+            bool: True se o usuário quer continuar, False se quer sair
         """
         # Usa o presenter para exibir a mensagem, delegando a formatação
         self.presenter.exibir_texto_aguardar(mensagem)
         
-        # Limpar qualquer evento de tecla pendente
-        keyboard.read_event(suppress=True)
+        # Aguarda entrada do usuário
+        entrada = input().strip().lower()
         
-        # Aguardar a próxima tecla
-        evento = keyboard.read_event(suppress=True)
-        
-        # Limpar o buffer de eventos de teclado
-        while keyboard.is_pressed(evento.name):
-            pass
-            
-        if evento.name == 'esc':
+        # Se o usuário digitou 'sair', retorna False
+        if entrada in ['sair', 'exit', 'quit', 'esc']:
             return False
+            
+        # Qualquer outra entrada significa continuar
         return True
     
     def _exibir_boas_vindas(self):
         """
         Exibe a mensagem de boas-vindas e introdução ao tutorial.
+        
+        Returns:
+            bool: True se o usuário quer continuar, False se quer sair
         """
         # Limpa a tela no início do tutorial
         self.presenter.limpar_tela()
         
         # Exibe o título do tutorial
-        self.presenter.exibir_titulo_tutorial("BOAS-VINDAS AO TUTORIAL DO RAGNER")
+        self.presenter.exibir_titulo_tutorial("BEM-VINDO AO RAGNER")
         
-        # Exibe a saudação inicial
-        self.presenter.exibir_saudacao("Bem-vindo ao tutorial do Ragner!")
+        # Texto de boas-vindas
+        boas_vindas = "Olá! Bem-vindo ao Ragner, um software educacional para desmistificar a IA Generativa Aumentada por Recuperação (RAG - Retrieval-Augmented Generation)."
+        self.presenter.exibir_texto_tutorial(boas_vindas)
         
-        # Exibe o texto de introdução com destaque para o termo RAG
-        intro_text = "O Ragner é um software educacional projetado para ilustrar o funcionamento da tecnologia RAG (Retrieval-Augmented Generation), um método poderoso para permitir que modelos de linguagem respondam a perguntas com base nos documentos que o usuário compartilha."
-        self.presenter.exibir_texto_tutorial(intro_text, destacar=["RAG (Retrieval-Augmented Generation)"])
+        # Explicação sobre RAG
+        explicacao_rag = "O RAG é uma técnica que permite que modelos de linguagem, como o ChatGPT, respondam suas perguntas com base em documentos específicos que você fornece. Isso é um processo útil para obter respostas mais precisas e para que ocorram menos eventos de \"alucinação\" das IA's."
+        self.presenter.exibir_texto_tutorial(explicacao_rag, destacar=["obter respostas mais precisas"])
         
-        # Exibe o objetivo do tutorial
-        objetivo = "O objetivo deste tutorial é explicar o processo RAG, mostrando como o Ragner utiliza seus documentos para encontrar informações relevantes e gerar respostas inteligentes."
+        # Objetivo do Ragner
+        objetivo = "O objetivo do Ragner é que você entenda como funcione o processo de RAG, vendo na prática os passos envolvidos."
         self.presenter.exibir_texto_tutorial(objetivo)
+        
+        # Aguarda tecla para continuar
+        if not self._aguardar_tecla():
+            return False
+        
+        # VISÃO GERAL: RAG em 4 Passos
+        self.presenter.exibir_titulo_tutorial("RAG EM 4 PASSOS: A JORNADA DE SEUS DOCUMENTOS À RESPOSTA")
+        
+        introducao_passos = "Quando você usa o Ragner, o sistema executa um fluxo completo, desde o processamento dos seus documentos até a geração de uma resposta. Para simplificar, dividimos esse processo em 4 passos principais."
+        self.presenter.exibir_texto_tutorial(introducao_passos, destacar=["4 passos"])
+        
+        # Os 4 passos
+        passo1 = "Passo 1 - Preparação: Seus documentos são transformados em pequenos blocos de texto (chunks) e, em seguida, em números (vetores)."
+        self.presenter.exibir_texto_tutorial(passo1, destacar=["Passo 1"])
+        
+        passo2 = "Passo 2 - Sua Pergunta: Sua pergunta também é convertida para estes números."
+        self.presenter.exibir_texto_tutorial(passo2, destacar=["Passo 2"])
+        
+        passo3 = "Passo 3 - A Busca: O sistema faz cálculos matemáticos para encontrar os blocos de texto mais relevantes para a sua pergunta."
+        self.presenter.exibir_texto_tutorial(passo3, destacar=["Passo 3"])
+        
+        passo4 = "Passo 4 - A Resposta: O sistema envia sua pergunta e os blocos encontrados para o ChatGPT, da OpenAI, que então gera uma resposta baseada apenas nas suas informações."
+        self.presenter.exibir_texto_tutorial(passo4, destacar=["Passo 4"])
+        
+        # Próximos passos
+        proximos_passos = "Nas próximas telas, vamos detalhar cada um desses passos, mostrando como o Ragner funciona por dentro."
+        self.presenter.exibir_texto_tutorial(proximos_passos)
+        
+        # Aguarda tecla para continuar antes do Passo 1
+        if not self._aguardar_tecla():
+            return False
+        
+        return True
     
     def _exibir_chave_api(self):
         """
-        Exibe informações sobre a chave da OpenAI e a conexão inteligente.
+        Este método não é mais necessário no novo tutorial.
         """
-        # Exibe o título da seção
-        self.presenter.exibir_titulo_tutorial("PASSO 1: A CHAVE DA OPEN AI E A CONEXÃO INTELIGENTE")
-        
-        # Texto de explicação sobre a API key
-        texto_api = "Para interagir com a inteligência artificial por trás da análise de texto e geração de respostas, o Ragner utiliza a tecnologia da OpenAI. Para isso, precisamos de uma chave de acesso, chamada API Key."
-        self.presenter.exibir_texto_tutorial(texto_api)
-        
-        # Introdução às etapas
-        self.presenter.exibir_texto_tutorial("Essa chave permite que o Ragner se comunique com os modelos de linguagem da OpenAI em duas etapas, que são:")
-        
-        # Etapa 1 com destaque
-        etapa1 = "1) Transformar texto em vetores (embeddings): Como veremos, o significado das palavras e frases pode ser capturado em sequências numéricas."
-        self.presenter.exibir_texto_tutorial(etapa1, destacar=["1) Transformar texto em vetores (embeddings):"])
-        
-        # Etapa 2 com destaque
-        etapa2 = "2) Gerar respostas: Utilizar o contexto encontrado nos seus documentos para criar respostas relevantes."
-        self.presenter.exibir_texto_tutorial(etapa2, destacar=["2) Gerar respostas:"])
-        
-        # Informação sobre armazenamento da chave
-        texto_armazenamento = "O Ragner salva essa chave de forma segura como uma variável de ambiente no seu computador (\"OPENAI_API_KEY\"). Você pode gerenciá-la através das configurações de ambiente do Windows (pesquise por \"variáveis de ambiente\")."
-        self.presenter.exibir_texto_tutorial(texto_armazenamento)
+        pass
     
     def _exibir_processo_indexacao(self):
         """
-        Exibe informações sobre o processo de "entendimento" dos arquivos.
+        Explica o processo de indexação de documentos (Passo 1: Preparação).
+        
+        Returns:
+            bool: True se o usuário quer continuar, False se quer sair
         """
-        # Exibe o título da seção
-        self.presenter.exibir_titulo_tutorial("PASSO 2: O PROCESSO DE \"ENTENDIMENTO\" DOS SEUS ARQUIVOS (INDEXAÇÃO)")
+        self.presenter.exibir_titulo_tutorial("PASSO 1: PREPARAÇÃO - DE DOCUMENTOS A NÚMEROS")
         
-        # Introdução ao processo de indexação
-        intro = "Com a chave da OpenAI configurada, o Ragner pode começar a processar seus documentos, localizados na pasta \"documentos\". Esse processo de \"entendimento\" envolve várias etapas:"
-        self.presenter.exibir_texto_tutorial(intro)
+        # Explicação inicial
+        explicacao_inicial = "Para que o Ragner possa encontrar a informação certa, ele precisa primeiro ler e entender seus documentos. Para isso, ele segue dois sub-passos:"
+        self.presenter.exibir_texto_tutorial(explicacao_inicial)
         
-        # Seção 2.1: Mapeamento dos arquivos
-        self.presenter.exibir_secao_numerada("2.1", "Mapeamento dos Arquivos", 
-                                            "O Ragner registra os arquivos encontrados para acompanhamento interno.")
+        # Sub-passo 1.1
+        sub_passo_1 = "1.1. De Documentos para Blocos de Texto (Chunks)"
+        self.presenter.exibir_texto_tutorial(sub_passo_1, destacar=["(Chunks)"])
         
-        # Seção 2.2: Leitura do conteúdo bruto
-        self.presenter.exibir_secao_numerada("2.2", "Leitura do Conteúdo Bruto", 
-                                            "O texto completo de cada arquivo é lido e armazenado temporariamente.")
+        explicacao_chunks = "O Ragner pega seus arquivos e os divide em pequenos pedaços de texto, chamados de chunks. Essa divisão garante que a busca seja mais precisa e rápida."
+        self.presenter.exibir_texto_tutorial(explicacao_chunks)
         
-        # Seção 2.3: Criação dos chunks
-        chunk_text = "Criação dos \"Chunks\": Quebrando o Texto em Partes Menores: Para facilitar a busca por informações relevantes, o texto é dividido em seções menores, chamadas \"chunks\". No Ragner, estamos utilizando parágrafos como unidade de chunk. A forma como o texto é dividida é uma área importante em sistemas RAG, e diferentes estratégias podem ser usadas."
-        self.presenter.exibir_secao_numerada("2.3", "Criação dos \"Chunks\"", 
-                                            "Quebrando o Texto em Partes Menores: Para facilitar a busca por informações relevantes, o texto é dividido em seções menores, chamadas \"chunks\". No Ragner, estamos utilizando parágrafos como unidade de chunk. A forma como o texto é dividida é uma área importante em sistemas RAG, e diferentes estratégias podem ser usadas.",
-                                            destacar=["o texto é dividido em seções menores, chamadas \"chunks\""])
+        pratica_titulo = "Na prática:"
+        self.presenter.exibir_texto_tutorial(pratica_titulo)
+        
+        pratica_1 = " - Você adiciona arquivos (PDF, DOCX, TXT) na pasta 'documentos' (durante a instalação, foi criado um atalho para esta na sua Área de Trabalho, mas como referência, o caminho no seu computador é \"C:\\Users\\SEU USUÁRIO AQUI\\AppData\\Local\\Ragner\\documentos\""
+        self.presenter.exibir_texto_tutorial(pratica_1)
+    
+        pratica_2 = " - O Ragner divide cada arquivo em chunks de aproximadamente 500 a 1000 caracteres, respeitando parágrafos e frases."
+        self.presenter.exibir_texto_tutorial(pratica_2)
+        
+        pratica_3 = " - Cada chunk é adicionado ao banco de dados (SQLite) com o nome do arquivo de origem."
+        self.presenter.exibir_texto_tutorial(pratica_3)
+
+        # Aguarda tecla para continuar
+        if not self._aguardar_tecla():
+            return False
+
+        # Sub-passo 1.2
+        sub_passo_2 = "1.2. De Blocos de Texto para Números (Vetorização)"
+        self.presenter.exibir_texto_tutorial(sub_passo_2, destacar=["(Vetorização)"])
+        
+        explicacao_numeros = "Computadores não entendem palavras, mas sim números. Por isso, a parte mais importante é traduzir cada chunk para uma linguagem numérica."
+        self.presenter.exibir_texto_tutorial(explicacao_numeros)
+        
+        # A mágica dos embeddings
+        magica_titulo = "A mágica dos Embeddings:"
+        self.presenter.exibir_texto_tutorial(magica_titulo, destacar=["Embeddings:"])
+        
+        magica_explicacao = "O Ragner envia cada chunk para um modelo da OpenAI, que o transforma em uma sequência de 1.536 números. Esses números, chamados de vetores, não são aleatórios: eles capturam o significado semântico do texto. Isso significa que textos com significados parecidos geram vetores numericamente semelhantes."
+        self.presenter.exibir_texto_tutorial(magica_explicacao)
+        
+        # Aguarda tecla para continuar
+        if not self._aguardar_tecla():
+            return False
+        
+        exemplo_titulo = "Exemplo:"
+        self.presenter.exibir_texto_tutorial(exemplo_titulo)
+        
+        exemplo_vetores = """Para ver quão grande estes números são, você pode digitar no Ragner "teste_vetor". O Ragner vai te pedir um texto (que pode ser uma palavra, uma frase, etc), e vai transformar este em um vetor usando o modelo text-embedding-3-small da Open AI. Este número é gigante, composto de 1536 números que vão de -1 a 1."""
+        
+        self.presenter.exibir_texto_tutorial(exemplo_vetores, destacar=["teste_vetor"])
+        
+        # Exemplo de uso em cinza
+        exemplo_uso = """> Você: teste_vetor
+> Digite um texto para ver seu vetor embedding: carro
+> Processando geração do embedding...
+> 
+> Embedding para o texto: 'carro'
+> Dimensão do vetor: 1536
+> 
+> Valores do embedding:
+> 0.026904 -0.007592 -0.041182 0.010810 0.006155 -0.020218 -0.005210 0.040300 -0.030819 0.005838 0.002297 0.028352 0.012683 -0.012377 0.004797 -0.003021 0.020195 -0.014006 0.002372 0.009317 0.033805 0.004463 0.039281 [etc]"""
+        
+        self.presenter.exibir_texto_aguardar(exemplo_uso)
+        
+       
+        resultado = "O resultado do processamento dos arquivos que você adicionou à pasta é um banco de dados onde cada chunk está associado ao seu vetor numérico, criando uma \"biblioteca\" que o computador entende perfeitamente."
+        self.presenter.exibir_texto_tutorial(resultado)
+        
+        # Aguarda tecla para continuar antes do Passo 2
+        if not self._aguardar_tecla():
+            return False
+        
+        return True
+    
+    def _exibir_vetorizacao(self):
+        """
+        Explica como a pergunta é transformada em números (Passo 2: Sua Pergunta).
+        """
+        self.presenter.exibir_titulo_tutorial("PASSO 2: SUA PERGUNTA - TRANSFORMANDO PALAVRAS EM NÚMEROS")
+        
+        # Explicação principal
+        explicacao_principal = "Quando você digita sua pergunta no Ragner, o sistema faz exatamente o que fez com seus documentos: ele envia sua pergunta para a OpenAI, que a converte em um vetor numérico de 1.536 dimensões."
+        self.presenter.exibir_texto_tutorial(explicacao_principal)
+        
+        # Resultado
+        resultado = "Agora, sua pergunta e todos os seus chunks estão na mesma representação numérica. É com base nessa similaridade numérica que o Ragner irá encontrar a resposta."
+        self.presenter.exibir_texto_tutorial(resultado, destacar=["chunks"])
+        
+        # Exemplo
+        exemplo_titulo = "Exemplo:"
+        self.presenter.exibir_texto_tutorial(exemplo_titulo)
+        
+        exemplo = "Sua pergunta \"Como acender um LED?\" se transforma em um vetor como [0.2345, -0.1234, 0.8765, ...]."
+        self.presenter.exibir_texto_tutorial(exemplo)
+    
+    def _exibir_comparacao_matematica(self):
+        """
+        Este método não é mais necessário pois foi incorporado ao _exibir_busca_vetorial.
+        """
+        pass
     
     def _exibir_busca_vetorial(self):
         """
-        Exibe informações sobre a busca vetorial e o índice FAISS.
+        Explica a busca vetorial (Passo 3: A Busca).
         """
-        # Exibe o título da seção
-        self.presenter.exibir_titulo_tutorial("PASSO 3: A MAGIA DA BUSCA: VETORES E O ÍNDICE FAISS")
+        self.presenter.exibir_titulo_tutorial("PASSO 3: A BUSCA - ENCONTRANDO OS CHUNKS MAIS RELEVANTES")
         
-        # Introdução à busca vetorial
-        intro = "Agora chegamos ao coração do processo RAG: como o Ragner realmente \"entende\" o significado do seu texto para encontrar informações relevantes. Isso é feito através de vetores e um sistema de indexação eficiente."
-        self.presenter.exibir_texto_tutorial(intro)
+        # Introdução
+        introducao = "Com sua pergunta e os chunks representados como vetores, o Ragner pode agora encontrar a melhor resposta. Ele compara o vetor da sua pergunta com todos os vetores dos seus chunks para encontrar os mais \"próximos\" matematicamente."
+        self.presenter.exibir_texto_tutorial(introducao)
         
-        # Seção 3.1: Vetorização
-        vetorizacao = "3.1) Vetorização (Embeddings): Transformando Texto em Números: Cada chunk de texto é transformado em uma longa sequência de números, chamada vetor ou embedding. Esses vetores são criados utilizando os modelos da OpenAI (lembra da API Key?). A grande sacada é que vetores de textos com significados semelhantes ficam \"próximos\" uns dos outros em um espaço matemático multidimensional."
-        self.presenter.exibir_texto_tutorial(vetorizacao, destacar=["Cada chunk de texto é transformado em uma longa sequência de números, chamada vetor ou embedding"])
+        # Como funciona a comparação
+        titulo_comparacao = "Como funciona a comparação?"
+        self.presenter.exibir_texto_tutorial(titulo_comparacao)
         
-        # Seção 3.2: Índice FAISS
-        faiss = "3.2) O Índice FAISS: Uma Biblioteca para Busca Rápida: Para encontrar rapidamente os vetores mais relevantes, o Ragner utiliza a biblioteca FAISS (Facebook AI Similarity Search). O FAISS cria uma espécie de \"mapa\" (índice) de todos os vetores dos seus documentos, permitindo uma busca extremamente veloz por similaridade."
-        self.presenter.exibir_texto_tutorial(faiss)
+        explicacao_comparacao = "O Ragner usa uma técnica muito rápida chamada Distância Euclidiana. Pense em cada vetor como um ponto em um mapa. O sistema mede a distância linear entre:"
+        self.presenter.exibir_texto_tutorial(explicacao_comparacao)
         
-        # Instrução sobre como visualizar vetores
-        visualizacao = "Você pode ter uma ideia desses vetores ao usar o comando status_tabela_chunks no programa principal. A saída mostrará sequências numéricas associadas a cada pedaço do seu texto. Além disso, temos também um comando de teste para visualizar os vetores de um texto específico, chamado teste_vetor."
-        self.presenter.exibir_texto_tutorial(visualizacao, destacar=["teste_vetor"])
+        pontos = "- O ponto da sua pergunta\n- O ponto de cada bloco de texto"
+        self.presenter.exibir_texto_tutorial(pontos)
+        
+        proximidade = "Quanto menor a distância entre os pontos, maior a similaridade de significado entre eles. É como encontrar os pontos mais próximos da sua pergunta no mapa."
+        self.presenter.exibir_texto_tutorial(proximidade)
+        
+        # Aguarda tecla para continuar
+        if not self._aguardar_tecla():
+            return False
+        
+        velocidade = "Graças à biblioteca FAISS (Facebook AI Similarity Search), essa comparação é feita em milissegundos, mesmo com milhares de documentos. O Ragner instantaneamente identifica os 3 a 5 chunks mais similares à sua pergunta, que são os trechos que provavelmente contêm a resposta."
+        self.presenter.exibir_texto_tutorial(velocidade)
+        
+        # Exemplo
+        titulo_exemplo = "Exemplo:"
+        self.presenter.exibir_texto_tutorial(titulo_exemplo)
+        
+        exemplo = """Vetor da sua pergunta: [0.7, 0.3, 0.8, ...]
+Vetor do Chunk A:      [0.6, 0.4, 0.7, ...] (muito próximo)
+Vetor do Chunk B:      [0.1, 0.9, 0.2, ...] (distante)
+
+O sistema seleciona o Chunk A, pois sua "distância" para a pergunta é menor."""
+        
+        self.presenter.exibir_texto_tutorial(exemplo)
     
     def _exibir_perguntas_respostas(self):
         """
-        Exibe informações sobre como fazer perguntas e encontrar respostas.
+        Exibe informações sobre o passo 4: como o ChatGPT gera a resposta final.
         """
-        # Exibe o título da seção
-        self.presenter.exibir_titulo_tutorial("PASSO 4: PRONTO PARA AS PERGUNTAS: ENCONTRANDO A RESPOSTA")
+        self.presenter.exibir_titulo_tutorial("PASSO 4: A RESPOSTA - GERANDO UMA RESPOSTA COM O CHATGPT")
         
-        # Introdução ao processo de perguntas e respostas
-        intro = "Com seus documentos processados e seus significados representados por vetores no índice FAISS, o Ragner está pronto para responder às suas perguntas!"
-        self.presenter.exibir_texto_tutorial(intro)
+        # Introdução
+        introducao = "Este é o último e crucial passo. O Ragner monta um pedido especial para a API do ChatGPT, combinando três elementos:"
+        self.presenter.exibir_texto_tutorial(introducao)
         
-        # Explicação do fluxo
-        fluxo = "Quando você digita uma pergunta e pressiona Enter, o seguinte acontece:"
-        self.presenter.exibir_texto_tutorial(fluxo)
+        # Os três elementos
+        elementos = """1. Sua pergunta original.
+2. Os chunks mais relevantes encontrados no passo anterior.
+3. Uma instrução clara do tipo: "Responda à pergunta usando APENAS as informações fornecidas nos trechos abaixo.\""""
+        self.presenter.exibir_texto_tutorial(elementos)
         
-        # Passo 4.1: Vetorização da pergunta
-        vetorizacao = "4.1) Vetorização da Pergunta: Assim como os chunks dos seus documentos, sua pergunta também é transformada em um vetor utilizando os modelos da OpenAI."
-        self.presenter.exibir_texto_tutorial(vetorizacao, destacar=["sua pergunta também é transformada em um vetor"])
-        
-        # Passo 4.2: Busca por similaridade
-        busca = "4.2) Busca por Similaridade no FAISS (Retrieval): O Ragner pega o vetor da sua pergunta e usa o índice FAISS para encontrar os vetores dos chunks de texto que são mais \"próximos\" (ou seja, mais semanticamente similares) a ele. Essa é a etapa de Retrieval do RAG."
-        self.presenter.exibir_texto_tutorial(busca, destacar=["encontrar os vetores dos chunks de texto que são mais \"próximos\""])
-        
-        # Passo 4.3: Geração da resposta
-        geracao = "4.3) Geração da Resposta (Generation): Os chunks de texto correspondentes aos vetores mais similares são então enviados para outro modelo de linguagem da OpenAI, juntamente com a sua pergunta original. Esse modelo usa o contexto fornecido pelos chunks para gerar uma resposta relevante e informativa. Essa é a etapa de Generation."
-        self.presenter.exibir_texto_tutorial(geracao, destacar=["enviados para outro modelo de linguagem da OpenAI"])
+        # Importância da instrução
+        importancia_instrucao = "Essa instrução é a chave. Ela garante que o ChatGPT não \"invente\" ou use seu conhecimento prévio. A resposta será gerada exclusivamente com base nos seus documentos. O Ragner então exibe a resposta e mostra as fontes utilizadas para que você possa verificar a informação."
+        self.presenter.exibir_texto_tutorial(importancia_instrucao)
     
     def _exibir_exploracao(self):
         """
         Exibe informações sobre como explorar e aprender mais sobre o Ragner.
         """
-        # Exibe o título da seção
-        self.presenter.exibir_titulo_tutorial("PASSO 5: EXPLORE E APRENDA!")
+        # Conclusão
+        conclusao_titulo = "Agora, explore as funcionalidades do Ragner para ver o RAG em ação:"
+        self.presenter.exibir_texto_tutorial(conclusao_titulo)
         
-        # Conclusão do tutorial
-        conclusao = "Agora você entende o fluxo principal do Ragner e como a tecnologia RAG funciona!"
-        self.presenter.exibir_texto_tutorial(conclusao)
+        # Lista de comandos para exploração
+        exploracoes = [
+            "- Adicione seus arquivos à pasta documentos (você deve ter um atalho para ela na sua Área de Trabalho).",
+            "- Use o comando recarregar_arquivos_da_pasta para processar novos arquivos (começe com arquivos menores, pois quanto maior o arquivo, maior o tempo de processamento).",
+            "- Use o comando teste_vetor para ver como um texto vira números.",
+            "- Use status_tabela_chunks para visualizar os pedaços de texto gerados.",
+            "Faça perguntas e veja como o Ragner encontra as respostas nos seus documentos, indicando as fontes."
+        ]
         
-        # Sugestões para exploração
-        exploracao = "Sinta-se à vontade para adicionar seus próprios documentos na pasta \"documentos\" e fazer perguntas. Experimente os comandos como status_tabela_arquivos, status_tabela_chunks e status_faiss para observar o processo em ação."
-        self.presenter.exibir_texto_tutorial(exploracao, destacar=["status_tabela_arquivos", "status_tabela_chunks", "status_faiss"])
-        
-        # Encerramento
-        encerramento = "O Ragner é uma ferramenta para aprender e explorar o mundo fascinante da Inteligência Artificial e do processamento de linguagem natural. Divirta-se!"
-        self.presenter.exibir_texto_tutorial(encerramento)
+        for exploracao in exploracoes:
+            if "recarregar_arquivos_da_pasta" in exploracao:
+                self.presenter.exibir_texto_tutorial(exploracao, destacar=["recarregar_arquivos_da_pasta"])
+            elif "teste_vetor" in exploracao:
+                self.presenter.exibir_texto_tutorial(exploracao, destacar=["teste_vetor"])
+            elif "status_tabela_chunks" in exploracao:
+                self.presenter.exibir_texto_tutorial(exploracao, destacar=["status_tabela_chunks"])
+            else:
+                self.presenter.exibir_texto_tutorial(exploracao)

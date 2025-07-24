@@ -36,8 +36,8 @@ class CLI:
         """Inicia a interface CLI do Ragner."""
         # Exibe mensagem de boas-vindas
         self.logger.registrar_info(f"{Cores.VERDE}\n*** Bem-vindo ao Ragner Chatbot!{Cores.RESET}")
-        self.logger.registrar_info(f"{Cores.RESET}Digite {Cores.AMARELO}'menu'{Cores.RESET} para ver os comandos disponíveis ou {Cores.AMARELO}'sair'{Cores.RESET} para encerrar.")
-        self.logger.registrar_info(f"{Cores.RESET}Digite sua pergunta e pressione Enter para começar.")
+        self.logger.registrar_info(f"\n{Cores.RESET}Digite {Cores.AMARELO}'menu'{Cores.RESET} para ver os comandos disponíveis, {Cores.AMARELO}'tutorial'{Cores.RESET} para ver o tutorial ou {Cores.AMARELO}'sair'{Cores.RESET} para encerrar o programa.")
+        self.logger.registrar_info(f"\n{Cores.RESET}Digite sua pergunta e pressione Enter para começar.")
         
         # Loop principal de interação
         continuar = True

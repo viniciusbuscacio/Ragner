@@ -53,11 +53,9 @@ class GerarRespostaUseCase:
             documentos_lista = ", ".join(documentos_disponiveis)
             system_prompt = (
                 "Você é um assistente chamado Ragner, que utiliza a técnica RAG para explica conceitos com base nas informações fornecidas. "
-                "Responda à pergunta do usuário usando apenas as informações dos trechos de documentos fornecidos. "
-                "Se a resposta não estiver nos trechos ou se você não tiver certeza, indique isso claramente. "
-                "Se uma informação vem claramente de uma fonte específica, cite-a. "
-                "Se múltiplos documentos contêm a mesma informação, cite apenas a fonte mais relevante. "
-                "Seja preciso e direto nas suas respostas."
+                "Responda à pergunta do usuário usando apenas as informações dos documentos fornecidos. "
+                "Se a resposta não estiver nos documentos ou se você não tiver certeza, indique isso claramente. "
+                "Seja preciso e direto nas suas respostas, sem mencionar números de trechos ou seções."
             )
             
             # Gera a resposta usando o modelo de linguagem
@@ -108,6 +106,6 @@ class GerarRespostaUseCase:
             chunk = item["chunk"]
             documento = item["documento"]
             
-            contexto += f"Trecho {i+1} (de {documento.arquivo_nome}):\n{chunk.chunk_texto}\n\n"
+            contexto += f"Documento: {documento.arquivo_nome}\n{chunk.chunk_texto}\n\n"
         
         return contexto

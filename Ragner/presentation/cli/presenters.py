@@ -23,7 +23,7 @@ class ChatPresenter:
     respostas e informações ao usuário na CLI.
     """
     
-    def __init__(self, largura_terminal=80, db_gateway=None):
+    def __init__(self, largura_terminal=120, db_gateway=None):
         """
         Inicializa o presenter.
         
@@ -97,12 +97,60 @@ class ChatPresenter:
             resposta: Objeto Resposta
             mostrar_fontes: Se True, exibe as fontes da resposta
         """
-        cli_logger.registrar_info(f"\n{Cores.VERDE}Ragner: {Cores.RESET}")
+        # Abordagem mais simples e confiável para formatação
+        texto = resposta.texto.strip()
         
-        # Quebra o texto em linhas com largura adequada
-        linhas = textwrap.wrap(resposta.texto, width=self.largura_terminal)
-        for linha in linhas:
-            cli_logger.registrar_info(linha)
+        # Se o texto contém blocos de código (```), preserva a formatação original
+        if '```' in texto:
+            # Para texto com código, mantém quebras naturais e preserva blocos
+            linhas = []
+            dentro_codigo = False
+            
+            for linha in texto.split('\n'):
+                if '```' in linha:
+                    dentro_codigo = not dentro_codigo
+                    linhas.append(linha)
+                elif dentro_codigo:
+                    # Dentro de bloco de código - preserva formatação exata
+                    linhas.append(linha)
+                else:
+                    # Fora de bloco de código - pode quebrar se muito longa
+                    if len(linha) > self.largura_terminal:
+                        linhas_quebradas = textwrap.wrap(
+                            linha, 
+                            width=self.largura_terminal,
+                            break_long_words=False,
+                            break_on_hyphens=False
+                        )
+                        linhas.extend(linhas_quebradas)
+                    else:
+                        linhas.append(linha)
+        else:
+            # Para texto sem código, usa quebra inteligente por parágrafos
+            paragrafos = texto.split('\n\n')
+            linhas = []
+            
+            for i, paragrafo in enumerate(paragrafos):
+                if paragrafo.strip():
+                    linhas_paragrafo = textwrap.wrap(
+                        paragrafo.strip(), 
+                        width=self.largura_terminal,
+                        break_long_words=False,
+                        break_on_hyphens=False
+                    )
+                    linhas.extend(linhas_paragrafo)
+                    # Adiciona linha em branco entre parágrafos (exceto no último)
+                    if i < len(paragrafos) - 1:
+                        linhas.append("")
+        
+        # Exibe as linhas formatadas
+        for i, linha in enumerate(linhas):
+            if i == 0:
+                # Primeira linha com o prefixo "Ragner:"
+                cli_logger.registrar_info(f"\n{Cores.VERDE}Ragner:{Cores.RESET} {linha}")
+            else:
+                # Linhas subsequentes
+                cli_logger.registrar_info(f"{Cores.RESET}{linha}")
         
         # Mostra as fontes utilizadas, se solicitado
         if mostrar_fontes and resposta.chunks_utilizados:
@@ -215,8 +263,20 @@ class ChatPresenter:
         seguindo os princípios da Clean Architecture.
         """
         try:
-            # Importamos aqui para evitar importação circular
-            from presentation.cli.tutorial import TutorialInterface
+            # Importamos usando caminho absoluto para evitar problemas de importação circular
+            import sys
+            import os
+            
+            # Adiciona o diretório atual ao path se necessário
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            
+            try:
+                from .tutorial import TutorialInterface
+            except ImportError:
+                # Fallback para import absoluto
+                from tutorial import TutorialInterface
             
             # Criamos a interface e delegamos a execução do tutorial
             tutorial_interface = TutorialInterface(
@@ -225,10 +285,10 @@ class ChatPresenter:
                 chat_controller=chat_controller
             )
             tutorial_interface.executar_tutorial()
-        except ImportError:
-            cli_logger.registrar_info(f"{Cores.VERMELHO}Erro: O módulo de tutorial não foi encontrado.{Cores.RESET}")
+        except ImportError as ie:
+            self.exibir_mensagem_erro(f"Erro: O módulo de tutorial não foi encontrado: {str(ie)}")
         except Exception as e:
-            cli_logger.registrar_info(f"{Cores.VERMELHO}Erro ao executar o tutorial: {str(e)}{Cores.RESET}")
+            self.exibir_mensagem_erro(f"Erro ao executar o tutorial: {str(e)}")
     
     def exibir_processando(self, operacao):
         """
@@ -239,15 +299,15 @@ class ChatPresenter:
         """
         cli_logger.registrar_info(f"{Cores.CINZA}Processando {operacao}...{Cores.RESET}")
     
-    def exibir_progresso(self, etapa, desc=""):
+    def exibir_progresso(self, Passo, desc=""):
         """
-        Exibe uma etapa do processamento RAG.
+        Exibe uma Passo do processamento RAG.
         
         Args:
-            etapa: Nome da etapa
+            Passo: Nome da Passo
             desc: Descrição adicional
         """
-        cli_logger.registrar_info(f"{Cores.CINZA}[[{etapa}]] {desc}{Cores.RESET}")
+        cli_logger.registrar_info(f"{Cores.CINZA}* {Passo}: {desc}{Cores.RESET}")
         time.sleep(0.5)  # Pequena pausa para visualização do processo
     
     def limpar_tela(self):
@@ -265,31 +325,31 @@ class ChatPresenter:
     
     def exibir_saudacao(self, texto):
         """
-        Exibe uma saudação do tutorial com formatação especial.
+        Exibe uma saudação do tutorial em branco.
         
         Args:
             texto: O texto da saudação a ser exibido
         """
-        cli_logger.registrar_info(f"\n{Cores.VERDE}{texto}{Cores.RESET}")
+        cli_logger.registrar_info(f"\n{Cores.BRANCO}{texto}{Cores.RESET}")
     
     def exibir_texto_tutorial(self, texto, destacar=None):
         """
-        Exibe texto do tutorial com possibilidade de destacar partes.
+        Exibe texto do tutorial em branco com possibilidade de destacar partes em verde.
         
         Args:
             texto: Texto completo a ser exibido
             destacar: Lista opcional de strings a serem destacadas em verde
         """
         if not destacar:
-            cli_logger.registrar_info(f"\n{texto}")
+            cli_logger.registrar_info(f"\n{Cores.BRANCO}{texto}{Cores.RESET}")
             return
             
         # Se temos trechos para destacar, substituímos cada um deles
-        texto_formatado = texto
+        texto_formatado = f"{Cores.BRANCO}{texto}{Cores.RESET}"
         for trecho in destacar:
-            texto_formatado = texto_formatado.replace(trecho, f"{Cores.VERDE}{trecho}{Cores.RESET}")
+            texto_formatado = texto_formatado.replace(trecho, f"{Cores.VERDE}{trecho}{Cores.RESET}{Cores.BRANCO}")
         
-        cli_logger.registrar_info(f"\n{texto_formatado}")
+        cli_logger.registrar_info(f"\n{texto_formatado}{Cores.RESET}")
     
     def exibir_passo_tutorial(self, numero, texto, destacar=None):
         """

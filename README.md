@@ -1,154 +1,328 @@
-# Ragner Chatbot: Desvendando o Retrieval-Augmented Generation (RAG)
+# Ragner: Software Educacional para Desmistificar a IA Generativa Aumentada por Recuperação
 
-> **Status: COMPLETO** - Versão 1.0 - Maio 2025
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Completo-brightgreen)](https://github.com/viniciusbuscacio/Ragner3)
 
-## Objetivo
+> **Versão 1.0** - Julho de 2025
 
-Este software educacional, desenvolvido em Python, tem como objetivo demonstrar de forma clara e interativa o funcionamento interno da técnica de Geração Aumentada por Recuperação (RAG). Através de uma interface de linha de comando (CLI), usuários, especialmente estudantes de tecnologia, poderão acompanhar cada etapa do processo, desde a indexação de documentos até a geração de respostas contextualizadas por uma Inteligência Artificial.
+## 📖 Resumo
 
-## Arquitetura do Projeto
+Este trabalho propõe o desenvolvimento de um **software educacional em Python** para desmistificar a técnica de **Geração Aumentada por Recuperação** (Retrieval-Augmented Generation, RAG).
 
-O projeto segue uma arquitetura limpa (Clean Architecture) com separação clara de responsabilidades:
+O objetivo principal é explicar o funcionamento interno do RAG, permitindo a **visualização interativa** de suas etapas através de uma interface de linha de comando (CLI). Usuários, especialmente estudantes de tecnologia, poderão acompanhar cada passo do processo, desde a indexação de documentos até a geração de respostas contextualizadas por uma Inteligência Artificial.
 
-* **Domain**: Classes de entidades centrais do sistema (Documento, Chunk, Embedding, etc.)
-* **Use Cases**: Regras de negócio e casos de uso da aplicação
-* **Infrastructure**: Implementações concretas para bancos de dados, APIs externas e serviços
-* **Presentation**: Interface com o usuário (CLI) e apresentação dos dados
+**Palavras-chave:** Modelos de Linguagem Ampla; Busca Vetorial; Vetorização; Ferramenta Didática; Python.
 
-## Funcionalidades Principais
+## 🎯 Objetivos
 
-* **Indexação de Documentos:** Permite adicionar arquivos nos formatos TXT, DOC/DOCX e PDF a uma pasta específica. O software processa esses arquivos, divide-os em partes (chunks) e cria representações vetoriais (embeddings) utilizando modelos da OpenAI.
-* **Armazenamento Vetorial:** Utiliza a biblioteca FAISS (Facebook AI Similarity Search) para construir um índice eficiente das representações vetoriais dos chunks.
-* **Armazenamento de Chunks:** Os chunks de texto são armazenados em um banco de dados SQLite para posterior recuperação.
-* **Busca Semântica:** Ao receber uma pergunta do usuário, o software utiliza o FAISS para buscar os chunks mais relevantes semanticamente à pergunta.
-* **Geração Aumentada:** A pergunta do usuário, juntamente com o contexto dos documentos relevantes (os chunks recuperados), são enviados para a API da OpenAI para gerar uma resposta informada.
-* **Interface Interativa (CLI):** O usuário interage com o chatbot através de comandos de texto no terminal, acompanhando cada etapa do processo com explicações detalhadas.
-* **Menu de Opções:** Oferece comandos para:
-    * Exibir informações sobre o chatbot (`sobre`).
-    * Obter ajuda e explicações (`tutorial`).
-    * Verificar o status do banco de dados e do índice FAISS (`status`, `status_tabela_arquivos`, `status_tabela_chunks`, `status_faiss`).
-    * Recarregar arquivos da pasta de documentos (`recarregar_arquivos_da_pasta`).
-    * Apagar todos os dados do chatbot (`apagar_tudo`).
-    * Sair do programa (`sair`).
-* **Testes Automatizados:** Suite completa de testes unitários para garantir a robustez e confiabilidade do sistema.
+### Objetivo Principal
+Desenvolver um software educacional para desmistificar e explicar interativamente o funcionamento da técnica RAG (Retrieval-Augmented Generation).
 
-## Como Utilizar
+### Objetivos Específicos
+1. **Visualizar o Processo RAG**: Desenvolver um software em Python para demonstrar cada etapa do processo RAG de forma interativa
+2. **Avaliar o Aprendizado**: Medir a evolução do conhecimento sobre RAG através de instrumentos de avaliação
+3. **Demonstrar Eficácia**: Mostrar a efetividade do RAG em fornecer respostas contextualmente relevantes, incluindo suas limitações
 
-1. **Pré-requisitos:**
-   * Python 3.x instalado no seu sistema.
-   * Uma chave de API da OpenAI. Você pode obter uma gratuitamente no site da [OpenAI](https://www.openai.com).
+## 🏗️ Metodologia
 
-2. **Instalação:**
-   * Clone este repositório ou copie os arquivos do software para o seu computador.
-   * Para executar (no PowerShell):
-     ```powershell
-     git clone https://github.com/viniciusbuscacio/Ragner.git
-     cd Ragner
-     python -m venv venv
-     .\venv\Scripts\activate
-     python -m pip install -r requirements.txt
-     python Ragner/Ragner.py
-     ```
+Este projeto se caracteriza como **Pesquisa Aplicada**, focando em resolver problemas práticos através do desenvolvimento de uma solução tecnológica tangível. A metodologia envolve:
 
-3. **Configuração:**
-   * Ao executar o `Ragner.py` pela primeira vez (ou se a chave não for encontrada), o software solicitará que você configure a sua chave de API da OpenAI. Siga as instruções exibidas no terminal. A chave será salva para uso futuro.
+### Desenvolvimento do Software
+- **Linguagem**: Python com arquitetura limpa (Clean Architecture)
+- **Indexação**: Utilização do FAISS (Facebook AI Similarity Search) para busca vetorial
+- **Embeddings**: Modelos de vetorização da OpenAI (text-embedding-3-small)
+- **Armazenamento**: SQLite para chunks de texto e FAISS para vetores
+- **Interface**: CLI interativa com explicações educacionais
 
-4. **Adicionando Documentos:**
-   * Para que o chatbot tenha informações para responder, você precisa adicionar arquivos (TXT, DOC/DOCX, PDF) na pasta `documentos` localizada no mesmo diretório do script `Ragner.py`.
-   * Após adicionar os arquivos, o software os processará em segundo plano (ou você pode usar o comando `recarregar_arquivos_da_pasta` no menu).
+### Avaliação Educacional
+Para avaliar a evolução do conhecimento sobre RAG, será realizado um levantamento de campo com estudantes de tecnologia através de:
+- Pesquisa quantitativa com questionários estruturados
+- Aplicação do mesmo questionário antes e depois do uso do software
+- Análise estatística comparativa dos resultados
 
-5. **Interagindo com o Chatbot:**
-   * Execute o script `Ragner.py` no seu terminal: `python Ragner/Ragner.py`
-   * O chatbot será iniciado e você poderá digitar suas perguntas diretamente.
-   * Para acessar o menu de opções, digite `menu` e pressione Enter.
-   * Para sair do programa, digite `sair` e pressione Enter.
+## ⚙️ Funcionalidades Implementadas
 
-6. **Executando os Testes:**
-   * Para verificar a integridade do sistema, execute os testes automatizados:
-     ```powershell
-     python run_tests.py
-     ```
+### 1. Configuração da API OpenAI
+- **Módulo de configuração** que permite inserção segura da chave API da OpenAI
+- **Armazenamento seguro** como variável de ambiente no sistema Windows
+- **Validação automática** da chave durante a inicialização
 
-## Funcionamento Interno e Metodologia
+### 2. Indexação de Documentos
+- **Suporte a múltiplos formatos**: PDF, DOC/DOCX, TXT
+- **Processamento inteligente**: Extração e divisão do conteúdo em chunks otimizados
+- **Vetorização**: Utilização do modelo `text-embedding-3-small` da OpenAI
+- **Armazenamento duplo**: 
+  - Vetores no índice FAISS (1536 dimensões)
+  - Chunks de texto no banco SQLite
+- **Gerenciamento dinâmico**: Remoção automática de referências quando documentos são deletados
+- **Feedback educacional**: Explicações detalhadas de cada etapa no terminal
 
-Este software implementa as seguintes etapas para demonstrar o funcionamento da técnica RAG:
+### 3. Busca e Resposta Aumentada
+- **Vetorização de consultas**: Perguntas convertidas em vetores usando o mesmo modelo de embedding
+- **Busca por similaridade**: Recuperação dos chunks mais relevantes via FAISS
+- **Geração contextualizada**: Respostas geradas pelo modelo `gpt-3.5-turbo` da OpenAI
+- **Combinação inteligente**: Pergunta original + contexto recuperado
+- **Transparência**: Exibição das fontes utilizadas na resposta
 
-**Configuração:** Para acessar os modelos de linguagem da OpenAI, o usuário precisa configurar uma chave API, obtida gratuitamente no site da OpenAI, seguindo as instruções fornecidas pelo software.
+### 4. Interface Educacional
+- **CLI Interativa**: Interface de linha de comando intuitiva
+- **Tutorial Integrado**: Módulo explicativo dos conceitos RAG passo a passo
+- **Comandos Educacionais**:
+  - `tutorial` - Explicação interativa do processo RAG
+  - `status` - Verificação do estado do sistema
+  - `sobre` - Informações sobre o software
+  - `teste_vetor` - Demonstração prática de vetorização
+  - E mais comandos para exploração
 
-**Indexação:** Após a configuração da chave API, o usuário pode adicionar arquivos nos formatos PDF, DOC/DOCX e TXT a uma pasta específica. O software utiliza a biblioteca Facebook AI Similarity Search (FAISS) e os modelos de vetorização (embedding) da OpenAI (como o `text-embedding-ada-002`) para indexar esses arquivos. Os blocos de texto (chunks) extraídos dos arquivos são armazenados em tabelas em um banco de dados SQLite, que são consultadas para a coleta desses chunks durante a busca. Todas as ações do aplicativo são exibidas no prompt com explicações para o usuário acompanhar o processo.
+## � Instalação e Configuração
 
-**Busca e Resposta:** O usuário pode fazer perguntas ao chatbot. O software envia a pergunta, juntamente com o contexto dos documentos relevantes, para a API da OpenAI. Os modelos de linguagem da OpenAI são responsáveis por gerar a resposta. A similaridade semântica entre a pergunta e os documentos é calculada utilizando o módulo FAISS.
+### Pré-requisitos
+- **Python 3.8 ou superior**
+- **Chave API da OpenAI** (obrigatória)
+- **Sistema Operacional Windows** (para executável)
 
-**Avaliação do Aprendizado:** Para avaliar a evolução do conhecimento sobre o RAG como consequência da utilização deste software, será realizado um levantamento de campo com estudantes de tecnologia. Uma pesquisa quantitativa com perguntas estruturadas será aplicada antes e depois do uso do software para coletar dados sobre o conhecimento dos estudantes sobre os conceitos do RAG.
+### Opção 1: Instalação via Executável (Recomendada)
+1. Baixe o executável `Ragner_Setup.exe` na pasta `installer/`
+2. Execute o instalador com privilégios de administrador
+3. Siga as instruções do assistente de instalação
+4. Configure sua chave API ao iniciar o programa
 
-## Tecnologias Utilizadas
+### Opção 2: Instalação para Desenvolvimento
+```bash
+# Clone o repositório
+git clone [URL_DO_REPOSITORIO]
+cd Ragner3
 
-* **Python:** Linguagem de programação principal.
-* **OpenAI API:** Para geração de embeddings e respostas de linguagem natural.
-* **FAISS (Facebook AI Similarity Search):** Para busca eficiente de similaridade vetorial.
-* **SQLite:** Banco de dados leve para armazenamento dos chunks.
-* **PyPDF2:** Para leitura de arquivos PDF.
-* **python-docx:** Para leitura de arquivos DOC e DOCX.
-* **SQLAlchemy:** Para interação com o SQLite.
-* **PyCryptodome:** Para operações de criptografia.
-* **Pytest:** Framework para testes automatizados.
+# Instale as dependências
+pip install -r requirements.txt
 
-## Estrutura do Projeto
+# Execute o programa
+python Ragner/Ragner.py
+```
+
+### Configuração da API Key
+1. **Primeira execução**: O sistema solicitará automaticamente sua chave API
+2. **Configuração manual**: Use a opção "Configurar API Key" no menu
+3. **Variável de ambiente**: Configure `OPENAI_API_KEY` no sistema
+
+## 🔧 Tecnologias e Arquitetura
+
+### Stack Tecnológico
+- **Linguagem Principal**: Python 3.8+
+- **API de IA**: OpenAI API (embeddings e chat completion)
+- **Busca Vetorial**: FAISS (Facebook AI Similarity Search)
+- **Banco de Dados**: SQLite para armazenamento de chunks
+- **Processamento de Arquivos**: 
+  - PyPDF2 (arquivos PDF)
+  - python-docx (arquivos DOC/DOCX)
+- **Segurança**: Gerenciamento seguro de chaves API
+
+### Arquitetura do Sistema
+O projeto segue os princípios da **Clean Architecture** com separação clara de responsabilidades:
 
 ```
-Ragner/
-├── domain/             # Classes de domínio e entidades
-│   ├── Chunk.py        # Representação de fragmentos de texto
-│   ├── Documento.py    # Representação de documentos
-│   ├── Embedding.py    # Representação de vetores de embedding
-│   ├── DadosRaw.py     # Representação de dados brutos
-│   ├── Log.py          # Sistema de logging
-│   ├── Pergunta.py     # Representação de perguntas do usuário
-│   ├── Resposta.py     # Representação de respostas geradas
+📁 Ragner/
+├── 🏛️ domain/              # Entidades centrais do sistema
+│   ├── Chunk.py            # Representação de fragmentos de texto
+│   ├── Documento.py        # Representação de documentos
+│   ├── Embedding.py        # Representação de vetores
 │   └── ...
-├── infrastructure/     # Implementações concretas
-│   ├── database/       # Acesso ao banco de dados SQLite
-│   ├── file_loaders/   # Carregadores de diferentes tipos de arquivo
-│   ├── language_model/ # Interface com a API OpenAI
-│   ├── repositories/   # Implementação de repositórios
-│   └── vector_store/   # Interface com o FAISS
-├── presentation/       # Interface com o usuário
-│   └── cli/            # Interface de linha de comando
-└── usecases/           # Regras de negócio e casos de uso
-    ├── buscar_contexto_usecase.py
-    ├── configurar_api_key_usecase.py
-    ├── fazer_pergunta_usecase.py
-    ├── gerar_resposta_usecase.py
+├── 🔧 infrastructure/      # Implementações concretas
+│   ├── database/           # Acesso ao SQLite
+│   ├── file_loaders/       # Processadores de arquivo
+│   ├── language_model/     # Interface OpenAI
+│   ├── repositories/       # Camada de dados
+│   └── vector_store/       # Interface FAISS
+├── 🎯 usecases/           # Regras de negócio
+│   ├── indexar_documentos_usecase.py
+│   ├── buscar_contexto_usecase.py
+│   ├── gerar_resposta_usecase.py
+│   └── ...
+├── 🖥️ presentation/       # Interface com usuário
+│   └── cli/               # Interface de linha de comando
+└── 🎯 usecases/           # Regras de negócio
     ├── indexar_documentos_usecase.py
-    └── tutorial_usecase.py
-tests/                  # Testes automatizados
-    ├── test_buscar_contexto_usecase.py
-    ├── test_chat_controller.py
-    ├── test_cli_interface.py
+    ├── buscar_contexto_usecase.py
+    ├── gerar_resposta_usecase.py
     └── ...
 ```
 
-## Estado Atual do Projeto
+## 💻 Guia de Utilização
 
-O projeto Ragner Chatbot está agora completo e totalmente funcional. Todas as funcionalidades planejadas foram implementadas e testadas extensivamente. O sistema pode ser utilizado como uma ferramenta educacional eficaz para compreender os conceitos e o funcionamento do RAG.
+### Interface de Linha de Comando
+O Ragner oferece uma interface CLI intuitiva com as seguintes opções:
 
-## Para Aprender Mais
+```
+🤖 RAGNER - Sistema RAG Educacional
+====================================
 
-* [Retrieval-Augmented Generation (RAG)](https://www.google.com/search?q=retrieval+augmented+generation)
-* [Facebook AI Similarity Search (FAISS)](https://github.com/facebookresearch/faiss)
-* [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
-* [SQLite Documentation](https://www.sqlite.org/docs.html)
+[1] 📄 Indexar documentos
+[2] ❓ Fazer perguntas
+[3] 🔑 Configurar API Key
+[4] 📚 Tutorial
+[5] 🚪 Sair
 
-## Contribuição
+Escolha uma opção: _
+```
 
-Contribuições são bem-vindas! Para contribuir:
+### Fluxo de Trabalho Típico
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Faça commit das suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Envie para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+#### 1. 📄 Indexação de Documentos
+- Selecione a opção "Indexar documentos"
+- Escolha os arquivos (.txt, .pdf, .docx) na pasta `documentos/`
+- O sistema processará automaticamente:
+  - Divisão em chunks otimizados
+  - Geração de embeddings via OpenAI
+  - Armazenamento no banco FAISS
 
-## Licença
+#### 2. ❓ Consultas Inteligentes
+- Acesse "Fazer perguntas"
+- Digite sua pergunta em linguagem natural
+- O sistema:
+  - Busca contexto relevante nos documentos
+  - Gera resposta usando GPT-4
+  - Exibe fontes utilizadas
 
-Este projeto é licenciado sob a licença MIT - veja o arquivo LICENSE para mais detalhes.
+#### 3. 🔑 Gestão de API Key
+- Configure sua chave OpenAI no primeiro uso
+- Atualize quando necessário
+- Verificação automática de validade
+
+### Exemplos de Uso
+```bash
+# Exemplo de pergunta eficaz:
+"Quais são os principais conceitos de machine learning apresentados no documento?"
+
+# Resultado esperado:
+✅ Contexto encontrado: 3 chunks relevantes
+📖 Fontes: documento1.pdf (página 15), documento2.txt
+🤖 Resposta: [Resposta detalhada baseada no contexto]
+```
+
+## 📋 Estrutura do Projeto
+
+### Organização de Diretórios
+```
+📁 Ragner3/
+├── 📄 README.md                    # Documentação principal
+├── 📄 requirements.txt             # Dependências Python
+├── 📄 Ragner.spec                  # Configuração PyInstaller
+├── 📁 Ragner/                      # Código fonte principal
+│   ├── 🐍 Ragner.py               # Ponto de entrada
+│   ├── 📁 domain/                 # Entidades de domínio
+│   ├── 📁 infrastructure/         # Implementações técnicas
+│   ├── 📁 usecases/              # Casos de uso
+│   └── 📁 presentation/          # Interface usuário
+├── 📁 database/                   # Banco SQLite
+├── 📁 documentos/                 # Documentos para indexação
+├── 📁 faiss_index/               # Índice vetorial FAISS
+├── 📁 installer/                  # Executável Windows
+└── 📁 documentos/                 # Documentos para indexação
+```
+
+### Componentes Principais
+
+#### 🏛️ Domain Layer (Entidades)
+- `Chunk.py`: Fragmentos de texto processados
+- `Documento.py`: Representação de documentos
+- `Embedding.py`: Vetores de embedding
+- `Pergunta.py` / `Resposta.py`: Interações do usuário
+
+#### 🔧 Infrastructure Layer (Implementações)
+- **Database**: Gerenciamento SQLite
+- **File Loaders**: Processadores PDF/DOCX/TXT
+- **Language Model**: Gateway OpenAI API
+- **Vector Store**: Interface FAISS
+- **Repositories**: Camada de persistência
+
+#### 🎯 Use Cases (Regras de Negócio)
+- `indexar_documentos_usecase.py`: Processamento de documentos
+- `buscar_contexto_usecase.py`: Busca semântica
+- `gerar_resposta_usecase.py`: Geração de respostas
+- `fazer_pergunta_usecase.py`: Fluxo completo RAG
+
+##  Contribuição e Metodologia
+
+### Metodologia de Desenvolvimento
+Este projeto segue uma abordagem acadêmica baseada em:
+
+1. **Análise de Requisitos**: Identificação de necessidades educacionais para RAG
+2. **Design Arquitetural**: Implementação de Clean Architecture
+3. **Desenvolvimento Iterativo**: Ciclos curtos com feedback contínuo  
+4. **Validação Experimental**: Testes com diferentes tipos de documentos
+5. **Otimização de Performance**: Ajuste de chunking e embedding
+
+### Como Contribuir
+1. **Fork** o repositório
+2. **Clone** sua fork localmente
+3. **Crie** uma branch para sua feature: `git checkout -b feature/nova-funcionalidade`
+4. **Implemente** suas mudanças seguindo a arquitetura existente
+5. **Commit** suas mudanças: `git commit -m "Adiciona nova funcionalidade"`
+6. **Push** para sua branch: `git push origin feature/nova-funcionalidade`
+7. **Abra** um Pull Request
+
+### Diretrizes de Código
+- Siga a **Clean Architecture** estabelecida
+- Use **type hints** em Python
+- Documente **APIs públicas**
+- Implemente **tratamento de erros** robusto
+
+## 📚 Recursos Educacionais
+
+### Conceitos Demonstrados
+- **Retrieval-Augmented Generation (RAG)**
+- **Embeddings semânticos** com OpenAI
+- **Busca vetorial** com FAISS
+- **Processamento de linguagem natural**
+- **Arquitetura limpa** em Python
+- **Persistência de dados** com SQLite
+
+### Casos de Uso Acadêmicos
+- 📖 **Pesquisa Bibliográfica**: Consulta rápida em papers e livros
+- 🎓 **Suporte Educacional**: Respostas baseadas em material didático  
+- 📝 **Análise Documental**: Extração de insights de documentos longos
+- 🔍 **Exploração de Conhecimento**: Descoberta de relações entre conceitos
+
+## 📄 Licença e Citação
+
+### Licença
+Este projeto é distribuído sob licença [MIT](LICENSE). Você é livre para usar, modificar e distribuir este software para fins educacionais e comerciais.
+
+### Como Citar
+Se você utilizar este projeto em pesquisa acadêmica, considere citar:
+
+```bibtex
+@software{ragner2024,
+  title = {Ragner: Sistema RAG Educacional para Demonstração de IA Generativa},
+  author = {[Seu Nome]},
+  year = {2024},
+  url = {https://github.com/[seu-usuario]/Ragner3}
+}
+```
+
+---
+
+## 🔗 Links Úteis
+
+- 🤖 **OpenAI API**: [platform.openai.com](https://platform.openai.com)
+- 📊 **FAISS Documentation**: [faiss.ai](https://faiss.ai)
+- 🐍 **Python Docs**: [docs.python.org](https://docs.python.org)
+- 🏗️ **Clean Architecture**: [Clean Code Blog](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+
+## 📞 Suporte e Contato
+
+Para dúvidas, sugestões ou contribuições:
+- 📧 **Email**: [seu-email@exemplo.com]
+- 💬 **Issues**: Abra uma issue neste repositório
+- 🐦 **Social**: [@seu-usuario](https://twitter.com/seu-usuario)
+
+---
+
+<div align="center">
+
+**Ragner** - Democratizando o acesso à tecnologia RAG para educação 🚀
+
+*Construído com ❤️ para a comunidade acadêmica*
+
+</div>

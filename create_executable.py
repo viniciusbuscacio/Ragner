@@ -30,19 +30,51 @@ def main():
         print("Erro: O diretório Ragner não foi encontrado!")
         return 1
     
+    # Limpa diretórios de build anteriores para evitar problemas de permissão
+    build_dir = os.path.join(projeto_dir, 'build')
+    if os.path.exists(build_dir):
+        print("Limpando diretório de build anterior...")
+        try:
+            # Força a remoção com permissões
+            if os.name == 'nt':  # Windows
+                subprocess.run(['cmd', '/c', 'rmdir', '/s', '/q', build_dir], 
+                             capture_output=True, check=False)
+            else:  # Unix/Linux
+                shutil.rmtree(build_dir, ignore_errors=True)
+        except Exception as e:
+            print(f"Aviso: Não foi possível limpar completamente o diretório de build: {e}")
+            print("Tentando continuar mesmo assim...")
+
     # Executa o PyInstaller para criar o executável
     print("\nIniciando o processo de criação do executável com PyInstaller...\n")
     
+    # Verifica se o PyInstaller está disponível
+    try:
+        subprocess.run(['pyinstaller', '--version'], check=True, capture_output=True)
+        pyinstaller_cmd = 'pyinstaller'
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Tenta encontrar PyInstaller via Python -m
+        try:
+            subprocess.run([sys.executable, '-m', 'PyInstaller', '--version'], check=True, capture_output=True)
+            pyinstaller_cmd = [sys.executable, '-m', 'PyInstaller']
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("Erro: PyInstaller não encontrado!")
+            print("Por favor, instale com: pip install pyinstaller")
+            return 1
+
     # Comando para o PyInstaller - Remoção da flag --windowed e adicionando --console
-    comando = [
-        'pyinstaller',
+    if isinstance(pyinstaller_cmd, str):
+        comando = [pyinstaller_cmd]
+    else:
+        comando = pyinstaller_cmd.copy()
+    
+    comando.extend([
         '--name=Ragner',
         '--onefile',                   # Cria um único arquivo executável
         '--console',                   # Mantém o console aberto para ver logs/erros
         '--add-data=Ragner;Ragner',    # Inclui o diretório Ragner
         '--add-data=documentos;documentos',  # Inclui o diretório documentos
         '--add-data=faiss_index;faiss_index',  # Inclui o diretório faiss_index
-        '--clean',                     # Limpa cache do PyInstaller antes da compilação
         # Exclusões para reduzir o tamanho
         '--exclude-module=matplotlib',
         '--exclude-module=PyQt5',
@@ -56,7 +88,7 @@ def main():
         # Adiciona um diretório de banco de dados vazio para ser incluído na distribuição
         '--add-data=database;database',  # Inclui o diretório database (se existir)
         'Ragner/Ragner.py'             # Script principal
-    ]
+    ])
     
     # Cria um diretório database vazio para ser incluído (se ainda não existir)
     database_dir = os.path.join(projeto_dir, 'database')

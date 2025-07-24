@@ -121,11 +121,10 @@ def verificar_criar_banco(logger=None, mostrar_log_usuario=True):
 
 
     else:
-        if logger:
-            logger.registrar_info(f"Banco de dados encontrado em: {db_path}")
-            logger.registrar_info("Verificando banco de dados...")
-        
         # Verificar se todas as tabelas existem com os campos corretos
+        if logger:
+            logger.registrar_info("Verificando banco de dados...")
+            
         for nome_tabela in tabelas.keys():
             # Verificar se a tabela existe
             cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{nome_tabela}'")

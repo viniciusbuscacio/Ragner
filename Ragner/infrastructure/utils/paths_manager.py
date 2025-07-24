@@ -44,13 +44,13 @@ class PathsManager:
         # Determinar o diretório base da aplicação
         if getattr(sys, 'frozen', False):
             # Se estamos em um executável PyInstaller
-            # Para aplicações instaladas, usamos AppData\Local\APP_NAME
-            self._base_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), APP_NAME)
+            # O diretório base é onde está o executável
+            self._base_dir = os.path.dirname(sys.executable)
         else:
             # Se estamos em desenvolvimento
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            # Volta três níveis para chegar ao diretório raiz do projeto
-            self._base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+            # Volta 3 níveis: paths_manager.py -> utils -> infrastructure -> Ragner -> Ragner3
+            self._base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
         
         # Definir os caminhos das pastas da aplicação
         self._documentos_dir = os.path.join(self._base_dir, "documentos")
@@ -72,7 +72,7 @@ class PathsManager:
         ]
         
         for directory in directories:
-            if not os.path.exists(directory):
+            if directory and not os.path.exists(directory):
                 os.makedirs(directory)
     
     @property
@@ -93,7 +93,9 @@ class PathsManager:
     @property
     def database_path(self):
         """Retorna o caminho completo para o arquivo do banco de dados."""
-        return os.path.join(self._database_dir, "database.sqlite3")
+        if self._database_dir:
+            return os.path.join(self._database_dir, "database.sqlite3")
+        return "database.sqlite3"
     
     @property
     def faiss_index_dir(self):
@@ -103,9 +105,13 @@ class PathsManager:
     @property
     def faiss_index_path(self):
         """Retorna o caminho completo para o arquivo do índice FAISS."""
-        return os.path.join(self._faiss_index_dir, "faiss_index.bin")
+        if self._faiss_index_dir:
+            return os.path.join(self._faiss_index_dir, "faiss_index.bin")
+        return "faiss_index.bin"
     
     @property
     def id_mapping_path(self):
         """Retorna o caminho completo para o arquivo de mapeamento de IDs."""
-        return os.path.join(self._faiss_index_dir, "id_mapping.pkl")
+        if self._faiss_index_dir:
+            return os.path.join(self._faiss_index_dir, "id_mapping.pkl")
+        return "id_mapping.pkl"

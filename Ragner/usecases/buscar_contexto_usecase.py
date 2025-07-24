@@ -115,7 +115,7 @@ class BuscarContextoUseCase:
             chunk = item["chunk"]
             documento = item["documento"]
             
-            contexto += f"[TRECHO {i+1} - Fonte: {documento.arquivo_nome}]\n"
+            contexto += f"[Fonte: {documento.arquivo_nome}]\n"
             contexto += f"{chunk.chunk_texto}\n\n"
         
         return contexto

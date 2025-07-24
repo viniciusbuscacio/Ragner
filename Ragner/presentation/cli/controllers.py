@@ -12,6 +12,7 @@ from tabulate import tabulate
 from presentation.cli.cli_cores import Cores
 from presentation.cli.cli_sair import MensagemSaida
 from presentation.cli.cli_logger import CLILogger
+from infrastructure.utils.paths_manager import PathsManager
 
 # Inicializa o logger para a interface CLI
 cli_logger = CLILogger()
@@ -51,22 +52,20 @@ class ChatController:
     
     def _obter_pasta_documentos(self):
         """
-        Obtém o caminho para a pasta de documentos.
+        Obtém o caminho para a pasta de documentos usando o PathsManager.
         
         Returns:
             str: Caminho para a pasta de documentos
         """
-        # Obtém o diretório raiz do projeto (assume que estamos em Ragner/presentation/cli)
-        diretorio_atual = os.path.dirname(os.path.abspath(__file__))
-        diretorio_raiz = os.path.dirname(os.path.dirname(os.path.dirname(diretorio_atual)))
+        # Usa o PathsManager para obter o caminho correto
+        paths_manager = PathsManager()
+        pasta_documentos = paths_manager.documentos_dir
         
-        # Define o caminho para a pasta de documentos
-        pasta_documentos = os.path.join(diretorio_raiz, "documentos")
-        
-        # Cria a pasta se não existir
-        if not os.path.exists(pasta_documentos):
-            os.makedirs(pasta_documentos)
-            cli_logger.registrar_info(f"Pasta de documentos criada em: {pasta_documentos}")
+        # Fallback caso o PathsManager retorne None
+        if not pasta_documentos:
+            pasta_documentos = os.path.join(os.getcwd(), "documentos")
+            if not os.path.exists(pasta_documentos):
+                os.makedirs(pasta_documentos)
         
         return pasta_documentos
     
@@ -217,31 +216,71 @@ class ChatController:
         documentos_no_banco = db_gateway.listar_arquivos_db()
         arquivos_processados = [doc['arquivo_nome'] for doc in documentos_no_banco]
         
-        self.presenter.exibir_mensagem_info(f"Documentos já processados: {len(arquivos_processados)}")
-        if arquivos_processados:
-            for nome in arquivos_processados:
-                self.presenter.exibir_mensagem_info(f"- {nome}")
-        
         # 3) Verificar arquivos removidos da pasta
-        self.presenter.exibir_mensagem_info("Verificando se há arquivos que foram removidos da pasta de documentos...")
+        self.presenter.exibir_mensagem_info("Verificando arquivos deletados...")
         arquivos_removidos = self.indexar_documentos_usecase.verificar_arquivos_deletados(self.pasta_documentos)
         
         if arquivos_removidos > 0:
             self.presenter.exibir_mensagem_info(f"Foram removidos {arquivos_removidos} arquivo(s) que não existem mais na pasta.")
         
-        # 4) Identificar novos documentos
-        novos_documentos = [doc for doc in arquivos_na_pasta if doc['nome'] not in arquivos_processados]
+        # 4) Verificar mudanças nos arquivos existentes (comparação de hash)
+        self.presenter.exibir_mensagem_info("Verificando modificações nos arquivos...")
+        import xxhash
         
-        self.presenter.exibir_mensagem_info(f"Documentos a processar: {len(novos_documentos)}")
-        if novos_documentos:
-            for doc in novos_documentos:
+        arquivos_modificados = []
+        documentos_atualizados = self.indexar_documentos_usecase.db_gateway.listar_arquivos_db()  # Recarregar após remoções
+        
+        for arquivo_pasta in arquivos_na_pasta:
+            nome_arquivo = arquivo_pasta['nome']
+            caminho_arquivo = arquivo_pasta['caminho']
+            
+            # Calcular hash atual do arquivo
+            try:
+                with open(caminho_arquivo, 'rb') as f:
+                    conteudo_binario = f.read()
+                    hash_atual = xxhash.xxh64(conteudo_binario).hexdigest()
+                
+                # Procurar o arquivo no banco de dados
+                arquivo_no_banco = None
+                for doc_banco in documentos_atualizados:
+                    if doc_banco['arquivo_nome'] == nome_arquivo:
+                        arquivo_no_banco = doc_banco
+                        break
+                
+                if arquivo_no_banco:
+                    # Arquivo existe no banco, comparar hash
+                    if arquivo_no_banco['arquivo_hash'] != hash_atual:
+                        self.presenter.exibir_mensagem_info(f"Arquivo {nome_arquivo} foi modificado (hash diferente)")
+                        arquivos_modificados.append(arquivo_pasta)
+                        
+                        # Remover versão antiga do banco
+                        chunks_removidos = self.indexar_documentos_usecase.chunk_repository.apagar_chunks_por_arquivo(arquivo_no_banco['arquivo_uuid'])
+                        self.indexar_documentos_usecase.db_gateway.apagar_dados_raw_por_arquivo_db(arquivo_no_banco['arquivo_uuid'])
+                        self.indexar_documentos_usecase.db_gateway.apagar_arquivo_db(arquivo_no_banco['arquivo_uuid'])
+                        self.presenter.exibir_mensagem_info(f"Versão antiga de {nome_arquivo} removida ({chunks_removidos} chunks)")
+                    else:
+                        self.presenter.exibir_mensagem_info(f"Arquivo {nome_arquivo} não foi modificado")
+                else:
+                    # Arquivo não existe no banco, é novo
+                    arquivos_modificados.append(arquivo_pasta)
+                    
+            except Exception as e:
+                self.presenter.exibir_mensagem_erro(f"Erro ao verificar arquivo {nome_arquivo}: {str(e)}")
+                arquivos_modificados.append(arquivo_pasta)  # Tentar reprocessar em caso de erro
+        
+        # 5) Processar arquivos novos e modificados
+        documentos_para_processar = arquivos_modificados
+        
+        self.presenter.exibir_mensagem_info(f"Documentos a processar: {len(documentos_para_processar)}")
+        if documentos_para_processar:
+            for doc in documentos_para_processar:
                 self.presenter.exibir_mensagem_info(f"- {doc['nome']}")
         
-            # 5) Processar novos documentos
-            self.presenter.exibir_mensagem_info("Iniciando processamento automático de novos documentos...")
+            # Processar documentos
+            self.presenter.exibir_mensagem_info("Iniciando processamento de documentos novos/modificados...")
             total_docs = 0
             total_chunks = 0
-            for doc in novos_documentos:
+            for doc in documentos_para_processar:
                 self.presenter.exibir_mensagem_info(f"Processando documento: {doc['nome']}")
                 try:
                     # Usar o caso de uso existente para indexar o documento
@@ -255,7 +294,7 @@ class ChatController:
                 except Exception as e:
                     self.presenter.exibir_mensagem_erro(f"Erro ao processar documento '{doc['nome']}': {str(e)}")
             
-            self.presenter.exibir_mensagem_sucesso(f"Processamento automático concluído. {total_docs} documentos e {total_chunks} chunks processados.")
+            self.presenter.exibir_mensagem_sucesso(f"Processamento concluído. {total_docs} documentos e {total_chunks} chunks processados.")
         
         # 6) Inicializar e sincronizar o índice FAISS
         self.presenter.exibir_mensagem_info("Inicializando índice FAISS no final do processo...")
@@ -265,7 +304,6 @@ class ChatController:
         vector_store.inicializar_indice()
         
         # Verificar e sincronizar o índice FAISS com o banco de dados
-        self.presenter.exibir_mensagem_info("Verificando sincronização do índice FAISS...")
         self.indexar_documentos_usecase.verificar_sincronizacao_faiss()
         
         self.presenter.exibir_mensagem_info(f"{Cores.CINZA}Inicialização do FAISS concluída.{Cores.RESET}")
@@ -338,8 +376,8 @@ class ChatController:
         self.presenter.exibir_pergunta(texto_pergunta)
         
         try:
-            # Etapa 1: Calculando o valor de embeddings da pergunta
-            self.presenter.exibir_progresso("Etapa 1", "Calculando o valor embeddings da sua pergunta...")
+            # Passo 1: Calculando o valor de embeddings da pergunta
+            self.presenter.exibir_progresso("Passo 1", "Calculando o valor embeddings da sua pergunta...")
             language_model = self.configurar_api_key_usecase.openai_gateway
             pergunta, embedding = self.fazer_pergunta_usecase.executar(texto_pergunta, language_model)
             
@@ -355,40 +393,76 @@ class ChatController:
                 self.presenter.exibir_mensagem_erro("Não foi possível processar sua pergunta. Tente novamente.")
                 return
             
-            # Etapa 2: Busca no módulo FAISS vetores mais próximos
-            self.presenter.exibir_progresso("Etapa 2", "Buscando no módulo FAISS vetores mais próximos...")
+            # Passo 2: Busca no módulo FAISS vetores mais próximos
+            self.presenter.exibir_progresso("Passo 2", "Buscando no módulo FAISS vetores mais próximos...")
             
             # Buscar chunks similares diretamente do vetor_store para mostrar informações sobre a busca
             top_k = self.buscar_contexto_usecase.max_chunks
+            chunk_ids = []
+            scores = []
+            
             try:
                 chunk_ids, scores = self.buscar_contexto_usecase.vector_store.buscar_chunks_similares(embedding, top_k)
                 
                 # Exibir o número de vetores encontrados
-                self.presenter.exibir_progresso("Etapa 3", f"Encontrados {len(chunk_ids)} vetores similares")
+                self.presenter.exibir_progresso("Passo 3", f"Encontrados {len(chunk_ids)} vetores similares")
                 
                 # Se encontrou algum vetor similar, mostre o score do primeiro
                 if len(chunk_ids) > 0 and len(scores) > 0:
                     best_score = scores[0]
                     self.presenter.exibir_mensagem_info(f"Score do vetor mais similar: {best_score:.6f} (menor valor = mais similar)")
             except Exception as e:
-                self.presenter.exibir_mensagem_erro(f"Erro ao buscar vetores similares: {str(e)}")
-                self.presenter.exibir_progresso("Etapa 3", "Encontrados 0 vetores similares")
+                error_message = str(e)
+                if "Índice FAISS vazio ou não inicializado" in error_message:
+                    # Se o índice FAISS está vazio, parar aqui e retornar resposta padrão
+                    self.presenter.exibir_mensagem_erro("Índice FAISS vazio ou não inicializado.")
+                    
+                    from domain.Resposta import Resposta
+                    self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A resposta será gerada sem consulta ao Chat GPT.")
+                    
+                    # Criando uma resposta padrão usando apenas parâmetros válidos
+                    resposta_padrao = Resposta(
+                        texto="Desculpe, não sei como responder esta pergunta.",
+                        chunks_utilizados=[]
+                    )
+                    
+                    # Exibe a resposta padrão
+                    self.presenter.exibir_resposta(resposta_padrao)
+                    return
+                else:
+                    self.presenter.exibir_mensagem_erro(f"Erro ao buscar vetores similares: {error_message}")
+                    self.presenter.exibir_progresso("Passo 3", "Encontrados 0 vetores similares")
             
-            # Etapa 4: Buscando no banco de dados os chunks associados com estes vetores
-            self.presenter.exibir_progresso("Etapa 4", "Buscando no banco de dados os chunks (pedaços de textos) associados com estes vetores...")
+            # Se não há chunk_ids válidos, retornar resposta padrão imediatamente
+            if not chunk_ids:
+                from domain.Resposta import Resposta
+                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A resposta será gerada sem consulta ao Chat GPT.")
+                
+                # Criando uma resposta padrão usando apenas parâmetros válidos
+                resposta_padrao = Resposta(
+                    texto="Desculpe, não sei como responder esta pergunta.",
+                    chunks_utilizados=[]
+                )
+                
+                # Exibe a resposta padrão
+                self.presenter.exibir_resposta(resposta_padrao)
+                return
+            
+            # Passo 4: Buscando no banco de dados os chunks associados com estes vetores
+            self.presenter.exibir_progresso("Passo 4", "Buscando no banco de dados os chunks (pedaços de textos) associados com estes vetores...")
             chunks_relevantes = self.buscar_contexto_usecase.executar(embedding)
             
-            # Etapa 5: Anexando chunks à pergunta que será enviada ao ChatGPT
+            # Passo 5: Anexando chunks à pergunta que será enviada ao ChatGPT
             num_chunks = len(chunks_relevantes)
             if num_chunks == 0:
-                self.presenter.exibir_progresso("Etapa 5", "Não foram encontrados chunks relevantes para a pergunta...")
+                self.presenter.exibir_progresso("Passo 5", "Não foram encontrados chunks relevantes para a pergunta...")
             else:
-                self.presenter.exibir_progresso("Etapa 5", f"Anexando {num_chunks} chunks à pergunta que será enviada ao ChatGPT...")
+                self.presenter.exibir_progresso("Passo 5", f"Anexando {num_chunks} chunks à pergunta que será enviada ao ChatGPT...")
             
             # Se não encontrou chunks relevantes, retorne uma resposta padrão
             if num_chunks == 0:
                 from domain.Resposta import Resposta
-                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A resposta será gerada sem consulta ao modelo.")
+                self.presenter.exibir_mensagem_info("Nenhum chunk relevante encontrado. A resposta será gerada sem consulta ao Chat GPT.")
                 
                 # Criando uma resposta padrão usando apenas parâmetros válidos
                 resposta_padrao = Resposta(
@@ -404,15 +478,15 @@ class ChatController:
             # Exibe o contexto encontrado
             self.presenter.exibir_contexto(chunks_relevantes)
             
-            # Etapa 6: Anexando o contexto e enviando a pergunta ao ChatGPT
-            self.presenter.exibir_progresso("Etapa 6", "Anexando o contexto encontrado e enviando a pergunta ao ChatGPT...")
+            # Passo 6: Anexando o contexto e enviando a pergunta ao ChatGPT
+            self.presenter.exibir_progresso("Passo 6", "Anexando o contexto encontrado e enviando a pergunta ao ChatGPT...")
             
-            # Etapa 7: Coletando a resposta do ChatGPT
-            self.presenter.exibir_progresso("Etapa 7", "Coletando a resposta do ChatGPT...")
+            # Passo 7: Coletando a resposta do ChatGPT
+            self.presenter.exibir_progresso("Passo 7", "Coletando a resposta do ChatGPT...")
             resposta = self.gerar_resposta_usecase.executar(pergunta, chunks_relevantes)
             
-            # Etapa 8: Respondendo ao usuário
-            self.presenter.exibir_progresso("Etapa 8", "Respondendo ao usuário...")
+            # Passo 8: Respondendo ao usuário
+            self.presenter.exibir_progresso("Passo 8", "Respondendo ao usuário...")
             
             # Exibe a resposta
             self.presenter.exibir_resposta(resposta)
@@ -424,6 +498,7 @@ class ChatController:
         """Exibe o status geral do sistema."""
         # TODO: Implementar estatísticas sobre documentos, chunks e índice
         self.presenter.exibir_mensagem_info("Status do sistema:")
+        self.presenter.exibir_mensagem_info(r"Pasta de documentos: C:\Users\SEU USUÁRIO\AppData\Local\Ragner\documentos")
         
         # Número de documentos e chunks
         self.presenter.exibir_mensagem_info("Verificando banco de dados...")
@@ -605,7 +680,7 @@ class ChatController:
             from tabulate import tabulate
             
             # Cabeçalhos para a tabela
-            headers = ["#", "Arquivo", "Conteúdo", "chunk_embedding"]
+            headers = ["#", "Arquivo", "Conteúdo do arquivo (Chunk)", "chunk_embedding"]
             
             # Usar o formato de tabela que suporta quebras de linha limitadas
             tabela_formatada = tabulate(
@@ -677,7 +752,7 @@ class ChatController:
         cli_logger.registrar_info("Digite 'apagar' para limpar a variável de ambiente criada \"OPENAI_API_KEY\".")
         cli_logger.registrar_info("Pressione ESC a qualquer momento para cancelar.")
         
-        cli_logger.registrar_info("\nPor favor, insira sua chave de API da OpenAI: ", end="", flush=True)
+        print("\nPor favor, insira sua chave de API da OpenAI: ", end="", flush=True)
         
         # Captura entrada do usuário caractere por caractere para detectar ESC
         api_key = ""
@@ -700,12 +775,12 @@ class ChatController:
                     if api_key:
                         api_key = api_key[:-1]
                         # Efeito visual do backspace: volta um caractere e apaga
-                        cli_logger.registrar_info("\b \b", end="", flush=True)
+                        print("\b \b", end="", flush=True)
                 else:
                     # Para qualquer outro caractere, adiciona à chave e exibe
                     char_decoded = char.decode('latin-1')  # ou 'utf-8' dependendo do ambiente
                     api_key += char_decoded
-                    cli_logger.registrar_info(char_decoded, end="", flush=True)
+                    print("*", end="", flush=True)  # Mostra asterisco em vez do caractere real
         
         # Verifica se a entrada está vazia
         if not api_key.strip():

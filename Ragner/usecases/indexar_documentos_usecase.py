@@ -8,9 +8,10 @@ Caso de uso: Indexar documentos.
 import os
 import glob
 import time
-import hashlib
+import xxhash
 import uuid
 import json
+from typing import Optional
 
 from domain.Documento import Documento
 from domain.Chunk import Chunk
@@ -30,7 +31,7 @@ class IndexarDocumentosUseCase:
     gerar embeddings e armazenar os chunks e embeddings no banco de dados e no FAISS.
     """
     
-    def __init__(self, db_gateway, vector_store, language_model, chunk_repository: ChunkRepository, logger: Logger = None):
+    def __init__(self, db_gateway, vector_store, language_model, chunk_repository: ChunkRepository, logger: Optional[Logger] = None):
         """
         Inicializa o caso de uso.
         
@@ -169,21 +170,42 @@ class IndexarDocumentosUseCase:
                 if self.logger:
                     self.logger.registrar_erro(f"Tipo de arquivo não suportado: {tipo}")    
                 return 0, 0
-            
+
             if self.logger:
                 self.logger.registrar_info(f"Processando documento: {caminho_arquivo}")
             
+            # Calcular o hash do arquivo usando xxhash (mais eficiente)
+            with open(caminho_arquivo, 'rb') as f:
+                conteudo_binario = f.read()
+                hash_arquivo = xxhash.xxh64(conteudo_binario).hexdigest()
+            
+            # Verificar se o arquivo já existe no banco de dados
+            nome_arquivo = os.path.basename(caminho_arquivo)
+            arquivos_existentes = self.db_gateway.listar_arquivos_db()
+            
+            for arquivo_existente in arquivos_existentes:
+                if arquivo_existente['arquivo_nome'] == nome_arquivo:
+                    # Arquivo já existe, verificar se foi modificado
+                    if arquivo_existente['arquivo_hash'] == hash_arquivo:
+                        if self.logger:
+                            self.logger.registrar_info(f"Arquivo {nome_arquivo} não foi modificado, pulando...")
+                        return 0, 0
+                    else:
+                        if self.logger:
+                            self.logger.registrar_info(f"Arquivo {nome_arquivo} foi modificado, removendo versão antiga...")
+                        # Remover a versão antiga
+                        chunks_removidos = self.chunk_repository.apagar_chunks_por_arquivo(arquivo_existente['arquivo_uuid'])
+                        self.db_gateway.apagar_dados_raw_por_arquivo_db(arquivo_existente['arquivo_uuid'])
+                        self.db_gateway.apagar_arquivo_db(arquivo_existente['arquivo_uuid'])
+                        if self.logger:
+                            self.logger.registrar_info(f"Versão antiga removida ({chunks_removidos} chunks)")
+                        break
+            
             # 5.1) Adicionar informações do arquivo na tabela "Arquivos"
             # Criar um novo documento com os dados do arquivo
-            nome_arquivo = os.path.basename(caminho_arquivo)
             arquivo_uuid = str(uuid.uuid4())
             data_modificacao = os.path.getmtime(caminho_arquivo)
             tamanho_bytes = os.path.getsize(caminho_arquivo)
-            
-            # Calcular o hash do arquivo
-            with open(caminho_arquivo, 'rb') as f:
-                conteudo_binario = f.read()
-                hash_arquivo = hashlib.sha256(conteudo_binario).hexdigest()
             
             # Criar um objeto Documento com os novos campos
             documento = Documento(
@@ -290,6 +312,12 @@ class IndexarDocumentosUseCase:
                 
                 # Gerar o embedding para o chunk
                 try:
+                    # Verificar se o chunk tem UUID válido
+                    if not chunk.chunk_uuid:
+                        if self.logger:
+                            self.logger.registrar_erro(f"Chunk {i} do documento {documento.arquivo_nome} não possui UUID válido")
+                        continue
+                        
                     vetor = self.language_model.gerar_embedding(chunk.chunk_texto)
                     embedding = Embedding(
                         id=str(uuid.uuid4()),
@@ -341,9 +369,6 @@ class IndexarDocumentosUseCase:
             int: Número de arquivos removidos
         """
         try:
-            if self.logger:
-                self.logger.registrar_info("Verificando arquivos deletados...")
-            
             # Listar todos os documentos no banco de dados
             arquivos = self.db_gateway.listar_arquivos_db()
             documentos = []

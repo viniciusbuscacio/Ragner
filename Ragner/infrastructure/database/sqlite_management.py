@@ -38,10 +38,6 @@ class SQLiteManagement:
             if logger:
                 logger.registrar_info(f"Usando banco de dados: {db_path}")
 
-        # Verifica e registra o caminho final do banco de dados
-        if logger:
-            logger.registrar_info(f"Caminho do banco de dados: {db_path}")
-
         self.db_path = db_path
         self.conn = None
         self.logger = logger
@@ -78,7 +74,7 @@ class SQLiteManagement:
             data_modificacao: Data de modificação do arquivo
             tamanho_bytes: Tamanho em bytes do arquivo
             arquivo_tipo: Tipo do arquivo (extensão)
-            arquivo_hash: Hash SHA-256 do conteúdo do arquivo
+            arquivo_hash: Hash xxHash64 do conteúdo do arquivo
             data_indexacao: Data em que o arquivo foi indexado
             
         Returns:

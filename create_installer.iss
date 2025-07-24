@@ -30,15 +30,18 @@ UpdateUninstallLogAppName=yes
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "documentsfolder"; Description: "{cm:DocumentsFolder}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "dist\Ragner.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "remove_env_var.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\Ragner - Executar"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\Ragner - Documentos"; Filename: "{localappdata}\{#MyAppName}\documentos"; Tasks: documentsfolder
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
@@ -55,12 +58,26 @@ brazilianportuguese.UninstallProgram=Desinstalar o programa
 brazilianportuguese.UninstallFailed=A desinstalação falhou com código: %1.
 brazilianportuguese.RemoveData=Deseja remover todos os dados do aplicativo (banco de dados, documentos e índices)?
 brazilianportuguese.UninstallOnly=O programa será desinstalado. Deseja continuar?
-brazilianportuguese.UninstallComplete=Ragner foi desinstalado com sucesso!
+brazilianportuguese.UninstallComplete=Ragner foi desinstalado com sucesso!%n%nA variável de ambiente OPENAI_API_KEY também foi removida do sistema.
 brazilianportuguese.ExitSetup=Fechar
 brazilianportuguese.UpdateConfirm=O programa será atualizado, mantendo todos os seus dados. Deseja continuar?
 brazilianportuguese.UninstallFinished=Desinstalação Concluída
+brazilianportuguese.DocumentsFolder=Criar atalho para pasta de documentos
 
 [Code]
+// Função para suprimir o diálogo de cancelamento
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Cancel := True;
+  Confirm := False;  // Não mostrar confirmação de cancelamento
+end;
+
+// Função para suprimir mensagem de cancelamento
+function CancelWithoutPrompt(): Boolean;
+begin
+  Result := True;
+end;
+
 var
   PreviousInstalled: Boolean;
   PreviousUninstaller: String;
@@ -137,14 +154,11 @@ function InitializeSetup: Boolean;
 var
   RegKey: String;
   RegValue: String;
-  ResultCode: Integer;
   UninstallKey: String;
   RegKeys: TArrayOfString;
   I: Integer;
   OldDir: String;
   OldDir3: String;
-  DestDir: String;
-  MsgResult: Integer;
 begin
   // Verificar se existe uma instalação prévia
   PreviousInstalled := False;
@@ -215,6 +229,7 @@ begin
     // Se escolheu desinstalar
     if OptionPage.Values[1] then
     begin
+      // Confirmar desinstalação sem possibilidade de cancelamento
       if MsgBox(ExpandConstant('{cm:UninstallOnly}'), mbConfirmation, MB_YESNO) = IDYES then
       begin
         // Verificar se existe o desinstalador nativo unins000.exe
@@ -225,20 +240,12 @@ begin
         // Primeiro tentar usar o desinstalador nativo (unins000.exe) 
         if FileExists(UninstallExe) then
         begin
-          if not Exec(UninstallExe, '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-          begin
-            MsgBox(Format(ExpandConstant('{cm:UninstallFailed}'), [IntToStr(ResultCode)]), mbError, MB_OK);
-            UninstallStatus := False;
-          end;
+          Exec(UninstallExe, '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
         end
         // Se não encontrar, usar o desinstalador registrado no sistema
         else if PreviousUninstaller <> '' then
         begin
-          if not Exec(RemoveQuotes(PreviousUninstaller), '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-          begin
-            MsgBox(Format(ExpandConstant('{cm:UninstallFailed}'), [IntToStr(ResultCode)]), mbError, MB_OK);
-            UninstallStatus := False;
-          end;
+          Exec(RemoveQuotes(PreviousUninstaller), '/SILENT', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
         end;
 
         // Garantir que os diretórios sejam removidos manualmente se necessário
@@ -249,48 +256,45 @@ begin
             DelTree(ExpandConstant('{localappdata}\Ragner3'), True, True, True);
         except
           // Se houve erro na remoção de diretórios, apenas continue
-          UninstallStatus := False;
         end;
 
         // Mostrar mensagem de confirmação
         MsgBox(ExpandConstant('{cm:UninstallComplete}'), mbInformation, MB_OK);
         
-        // Encerrar o instalador após a desinstalação, não prosseguir para instalar
+        // Encerrar o instalador após a desinstalação sem dar opção de cancelar
         WizardForm.Close();
         Result := False;
         Exit;
       end
       else
       begin
-        // Se cancelou a desinstalação, voltar para a página de opções
-        Result := False;
+        // Se não quis desinstalar, prosseguir com atualização em vez de cancelar
+        OptionPage.Values[0] := True;
+        OptionPage.Values[1] := False;
+        Result := True;
       end;
     end
     else if OptionPage.Values[0] then
     begin
-      // Confirmar atualização
-      if MsgBox(ExpandConstant('{cm:UpdateConfirm}'), mbConfirmation, MB_YESNO) = IDYES then
+      // Confirmar atualização - sempre prosseguir sem cancelar
+      if MsgBox(ExpandConstant('{cm:UpdateConfirm}'), mbConfirmation, MB_YESNO) = IDNO then
       begin
-        // Configurar parâmetros para desinstalação mantendo dados
-        Params := '/SILENT';
-        
-        // Executar o desinstalador se existir
-        if PreviousUninstaller <> '' then
-        begin
-          if not Exec(RemoveQuotes(PreviousUninstaller), Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
-          begin
-            MsgBox(Format(ExpandConstant('{cm:UninstallFailed}'), [IntToStr(ResultCode)]), mbError, MB_OK);
-          end;
-        end;
-        
-        // Definir flag para migrar na instalação
-        ShouldMigrate := True;
-      end
-      else
-      begin
-        // Se cancelou a atualização, voltar para a página de opções
-        Result := False;
+        // Mesmo se cancelou a confirmação, prosseguir com a instalação padrão
+        // em vez de abortar completamente
       end;
+      
+      // Configurar parâmetros para desinstalação mantendo dados
+      Params := '/SILENT';
+      
+      // Executar o desinstalador se existir
+      if PreviousUninstaller <> '' then
+      begin
+        Exec(RemoveQuotes(PreviousUninstaller), Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+      end;
+      
+      // Definir flag para migrar na instalação
+      ShouldMigrate := True;
+      Result := True;
     end;
   end
   // Na página de conclusão da desinstalação, apenas fechar o instalador
@@ -337,9 +341,9 @@ begin
         ForceDirectories(ExpandConstant('{app}\faiss_index'));
         
         // Copiar os dados
-        FileCopy(OldDir + '\database\*', ExpandConstant('{app}\database\*'), False);
-        FileCopy(OldDir + '\documentos\*', ExpandConstant('{app}\documentos\*'), False); 
-        FileCopy(OldDir + '\faiss_index\*', ExpandConstant('{app}\faiss_index\*'), False);
+        CopyFile(OldDir + '\database\*', ExpandConstant('{app}\database\*'), False);
+        CopyFile(OldDir + '\documentos\*', ExpandConstant('{app}\documentos\*'), False); 
+        CopyFile(OldDir + '\faiss_index\*', ExpandConstant('{app}\faiss_index\*'), False);
       end;
       
       // Migrar dados do Ragner3 (pasta incorreta) se existir
@@ -351,9 +355,9 @@ begin
         ForceDirectories(ExpandConstant('{app}\faiss_index'));
         
         // Copiar os dados
-        FileCopy(OldDir3 + '\database\*', ExpandConstant('{app}\database\*'), False);
-        FileCopy(OldDir3 + '\documentos\*', ExpandConstant('{app}\documentos\*'), False); 
-        FileCopy(OldDir3 + '\faiss_index\*', ExpandConstant('{app}\faiss_index\*'), False);
+        CopyFile(OldDir3 + '\database\*', ExpandConstant('{app}\database\*'), False);
+        CopyFile(OldDir3 + '\documentos\*', ExpandConstant('{app}\documentos\*'), False); 
+        CopyFile(OldDir3 + '\faiss_index\*', ExpandConstant('{app}\faiss_index\*'), False);
       end;
     end;
   end
@@ -382,6 +386,7 @@ end;
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   MsgResult: Integer;
+  VariavelRemovida: Boolean;
 begin
   if CurUninstallStep = usUninstall then
   begin
@@ -404,6 +409,56 @@ begin
       DelTree(ExpandConstant('{localappdata}\Ragner'), True, True, True);
       DelTree(ExpandConstant('{localappdata}\Ragner3'), True, True, True);
     end;
+    
+    // Remover a variável de ambiente OPENAI_API_KEY (sempre remove, independente da escolha dos dados)
+    VariavelRemovida := False;
+    
+    // Método 1: Executar script PowerShell (mais confiável e robusto)
+    if FileExists(ExpandConstant('{app}\remove_env_var.ps1')) then
+    begin
+      if Exec('powershell.exe', '-ExecutionPolicy Bypass -File "' + ExpandConstant('{app}\remove_env_var.ps1') + '"', '', SW_HIDE, ewWaitUntilTerminated, MsgResult) then
+      begin
+        if MsgResult = 0 then VariavelRemovida := True;
+      end;
+    end;
+    
+    // Método 2: Usar REG DELETE diretamente (backup)
+    if not VariavelRemovida then
+    begin
+      if Exec('reg.exe', 'query "HKEY_CURRENT_USER\Environment" /v OPENAI_API_KEY', '', SW_HIDE, ewWaitUntilTerminated, MsgResult) then
+      begin
+        if MsgResult = 0 then // Variável existe
+        begin
+          Exec('reg.exe', 'delete "HKEY_CURRENT_USER\Environment" /v OPENAI_API_KEY /f', '', SW_HIDE, ewWaitUntilTerminated, MsgResult);
+          if MsgResult = 0 then VariavelRemovida := True;
+        end;
+      end;
+    end;
+    
+    // Método 3: Usar as funções do Inno Setup como último recurso
+    if not VariavelRemovida and RegValueExists(HKEY_CURRENT_USER, 'Environment', 'OPENAI_API_KEY') then
+    begin
+      if RegDeleteValue(HKEY_CURRENT_USER, 'Environment', 'OPENAI_API_KEY') then
+        VariavelRemovida := True;
+    end;
+    
+    // Se for administrador, tentar remover também da variável de sistema
+    if IsAdmin() then
+    begin
+      if Exec('reg.exe', 'query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v OPENAI_API_KEY', '', SW_HIDE, ewWaitUntilTerminated, MsgResult) then
+      begin
+        if MsgResult = 0 then // Variável existe no sistema
+        begin
+          Exec('reg.exe', 'delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v OPENAI_API_KEY /f', '', SW_HIDE, ewWaitUntilTerminated, MsgResult);
+        end;
+      end;
+      
+      // Backup usando funções do Inno Setup
+      if RegValueExists(HKEY_LOCAL_MACHINE, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'OPENAI_API_KEY') then
+      begin
+        RegDeleteValue(HKEY_LOCAL_MACHINE, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', 'OPENAI_API_KEY');
+      end;
+    end;
   end;
 end;
 
@@ -417,6 +472,6 @@ end;
 // Função para lidar com cliques nos botões do desinstalador
 function UninstallButtonClick(CurUninstallStep: TUninstallStep; ButtonID: Integer): Boolean;
 begin
-  // Sempre permitir que o botão funcione, independente da etapa
+  // Sempre permitir que o botão funcione, independente da Passo
   Result := True;
 end;

@@ -6,7 +6,22 @@ Tutorial Interface: Classe responsável por intermediar a interação entre
 o presenter e o caso de uso do tutorial.
 """
 
-from usecases.tutorial_usecase import TutorialUseCase
+import sys
+import os
+
+# Adiciona o diretório raiz do projeto ao sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+try:
+    from usecases.tutorial_usecase import TutorialUseCase
+except ImportError:
+    # Fallback para quando executado como executável
+    import sys
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(os.path.dirname(current_dir))
+    sys.path.insert(0, parent_dir)
+    from usecases.tutorial_usecase import TutorialUseCase
 
 
 class TutorialInterface:
