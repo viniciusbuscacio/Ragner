@@ -116,6 +116,4 @@ O Ragner usa uma interface de chat simples e direta. Seguem algumas imagens:
 
 ![Screenshot 5](installer/screenshots/05.png)
 
-![Screenshot 6](installer/screenshots/06.png)
-
 ![Screenshot 7](installer/screenshots/07.png)
