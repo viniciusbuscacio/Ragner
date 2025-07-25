@@ -287,9 +287,8 @@ class ChatController:
                     docs, chunks = self.indexar_documentos_usecase.indexar_documento(doc['caminho'])
                     total_docs += docs
                     total_chunks += chunks
-                    if docs > 0:
-                        self.presenter.exibir_mensagem_sucesso(f"Documento '{doc['nome']}' processado com sucesso: {chunks} chunks gerados")
-                    else:
+                    # Mensagem removida para evitar duplicação
+                    if docs == 0:
                         self.presenter.exibir_mensagem_erro(f"Falha ao processar documento '{doc['nome']}'")
                 except Exception as e:
                     self.presenter.exibir_mensagem_erro(f"Erro ao processar documento '{doc['nome']}': {str(e)}")

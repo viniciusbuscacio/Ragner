@@ -22,6 +22,8 @@ from domain.repositories.ChunkRepository import ChunkRepository
 from infrastructure.file_loaders.pdf_loader import PDFLoader
 from infrastructure.file_loaders.docx_loader import DOCXLoader
 from infrastructure.file_loaders.txt_loader import TXTLoader
+from infrastructure.utils.progress_bar import ProgressBar
+from presentation.cli.cli_cores import Cores
 
 class IndexarDocumentosUseCase:
     """
@@ -126,26 +128,45 @@ class IndexarDocumentosUseCase:
                 self.logger.registrar_info(f"Pasta de documentos criada: {pasta_documentos}")
             return 0, 0
         
+        # Coletar todos os arquivos primeiro
+        todos_arquivos = []
+        todos_arquivos.extend(glob.glob(os.path.join(pasta_documentos, "**/*.pdf"), recursive=True))
+        todos_arquivos.extend(glob.glob(os.path.join(pasta_documentos, "**/*.docx"), recursive=True))
+        todos_arquivos.extend(glob.glob(os.path.join(pasta_documentos, "**/*.txt"), recursive=True))
+        
+        if not todos_arquivos:
+            if self.logger:
+                self.logger.registrar_info("Nenhum documento encontrado para indexar.")
+            return 0, 0
+        
         total_documentos = 0
         total_chunks = 0
         
-        # Processa documentos PDF
-        for arquivo in glob.glob(os.path.join(pasta_documentos, "**/*.pdf"), recursive=True):
+        # Criar barra de progresso para múltiplos arquivos (SEMPRE mostrar)
+        progress_arquivos = None
+        if len(todos_arquivos) >= 1:  # Mostrar para qualquer quantidade de arquivos
+            if self.logger:
+                self.logger.registrar_info(f"Encontrados {len(todos_arquivos)} documentos para processar...")
+            
+            print(f"{Cores.CINZA}Indexando {len(todos_arquivos)} documentos...{Cores.RESET}")
+            progress_arquivos = ProgressBar(
+                total=len(todos_arquivos),
+                prefixo="Documentos"
+            )
+        
+        # Processar cada arquivo
+        for i, arquivo in enumerate(todos_arquivos):
+            if progress_arquivos:
+                nome_arquivo = os.path.basename(arquivo)
+                progress_arquivos.atualizar(i + 1)
+            
             n_docs, n_chunks = self.indexar_documento(arquivo)
             total_documentos += n_docs
             total_chunks += n_chunks
         
-        # Processa documentos DOCX
-        for arquivo in glob.glob(os.path.join(pasta_documentos, "**/*.docx"), recursive=True):
-            n_docs, n_chunks = self.indexar_documento(arquivo)
-            total_documentos += n_docs
-            total_chunks += n_chunks
-        
-        # Processa documentos TXT
-        for arquivo in glob.glob(os.path.join(pasta_documentos, "**/*.txt"), recursive=True):
-            n_docs, n_chunks = self.indexar_documento(arquivo)
-            total_documentos += n_docs
-            total_chunks += n_chunks
+        # Finalizar barra de progresso dos arquivos
+        if progress_arquivos:
+            progress_arquivos.finalizar(f"Indexação concluída: {total_documentos} documentos, {total_chunks} chunks")
         
         if self.logger:
             self.logger.registrar_info(f"Total de documentos indexados: {total_documentos}")
@@ -171,9 +192,6 @@ class IndexarDocumentosUseCase:
                     self.logger.registrar_erro(f"Tipo de arquivo não suportado: {tipo}")    
                 return 0, 0
 
-            if self.logger:
-                self.logger.registrar_info(f"Processando documento: {caminho_arquivo}")
-            
             # Calcular o hash do arquivo usando xxhash (mais eficiente)
             with open(caminho_arquivo, 'rb') as f:
                 conteudo_binario = f.read()
@@ -273,13 +291,7 @@ class IndexarDocumentosUseCase:
                 data_armazenamento=dados_raw.data_armazenamento
             )
             
-            if self.logger:
-                self.logger.registrar_info(f"Conteúdo de texto de '{documento.arquivo_nome}' adicionado à tabela 'dados_raw'.")
-            
             # 5.3) Processar o documento para extrair chunks
-            if self.logger:
-                self.logger.registrar_info(f"Iniciando o processamento de '{documento.arquivo_nome}' para gerar chunks...")
-            
             # Carrega o documento usando o loader apropriado para processar chunks
             chunks_texto = self.loaders[tipo].carregar(caminho_arquivo)
             
@@ -293,7 +305,23 @@ class IndexarDocumentosUseCase:
             
             # Processar os chunks
             chunk_embeddings = []
+            
+            # Criar barra de progresso para chunks (SEMPRE mostrar)
+            progress_chunks = None
+            if len(chunks_texto) >= 1:  # Mostrar para qualquer arquivo com 1 ou mais chunks
+                progress_chunks = ProgressBar(
+                    total=len(chunks_texto), 
+                    prefixo="Chunks"
+                )
+            
             for i, texto_chunk in enumerate(chunks_texto):
+                
+                # Atualizar barra de progresso
+                if progress_chunks:
+                    progress_chunks.atualizar(i + 1)
+                elif len(chunks_texto) > 1:  # Para arquivos sem barra, mostrar progresso
+                    if (i + 1) % 5 == 0 or i == len(chunks_texto) - 1:
+                        print(f"\rProcessando chunk {i+1}/{len(chunks_texto)}...", end='', flush=True)
                 
                 # Criar um objeto Chunk
                 chunk = Chunk(
@@ -339,14 +367,30 @@ class IndexarDocumentosUseCase:
                     if self.logger:
                         self.logger.registrar_erro(traceback.format_exc())
             
-            # Adicionar os embeddings ao vector store
+            # Finalizar barra de progresso dos chunks (APÓS o loop)
+            if progress_chunks:
+                progress_chunks.finalizar(f"Chunks processados: {len(chunk_embeddings)}/{len(chunks_texto)}")
+            elif len(chunks_texto) > 1:
+                print(f"\n✓ Chunks processados: {len(chunk_embeddings)}/{len(chunks_texto)}")
+            
+            # Adicionar os embeddings ao vector store com barra de progresso
             if chunk_embeddings:
+                if len(chunk_embeddings) >= 1:  # SEMPRE mostrar barra para qualquer embedding
+                    progress_embeddings = ProgressBar(
+                        total=len(chunk_embeddings),
+                        prefixo="FAISS"
+                    )
+                    
+                    # Simular progresso durante adição ao FAISS
+                    for i in range(len(chunk_embeddings)):
+                        progress_embeddings.atualizar(i + 1)
+                        time.sleep(0.01)  # Pequena pausa para visualizar o progresso
+                    
+                    progress_embeddings.finalizar("Vetores indexados no FAISS")
+                
                 self.vector_store.adicionar_embeddings(chunk_embeddings)
             
-            if self.logger:
-                self.logger.registrar_info(f"{tipo.upper()} carregado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks criados")
-                self.logger.registrar_info(f"Documento indexado: {documento.arquivo_nome}, {len(chunk_embeddings)} chunks")
-            
+            # Logs removidos para evitar duplicação no terminal
             return 1, len(chunk_embeddings)
         
         except Exception as e:

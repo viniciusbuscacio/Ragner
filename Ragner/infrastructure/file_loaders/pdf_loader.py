@@ -52,9 +52,7 @@ class PDFLoader:
             chunks = self._dividir_em_chunks(texto_completo)
             
             # Notifica sobre o processamento do arquivo usando o logger se disponível
-            if self.logger:
-                self.logger.registrar_info(f"PDF carregado: {os.path.basename(caminho_arquivo)}, {len(chunks)} chunks extraídos")
-            
+            # Log removido para evitar duplicação no terminal
             return chunks
         
         except Exception as e:

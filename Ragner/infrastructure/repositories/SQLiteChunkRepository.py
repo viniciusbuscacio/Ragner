@@ -24,7 +24,7 @@ class SQLiteChunkRepository(ChunkRepository):
     de Chunks usando o SQLiteManagement como mecanismo de persistência.
     """
     
-    def __init__(self, db_gateway: SQLiteManagement, logger: Logger = None):
+    def __init__(self, db_gateway: SQLiteManagement, logger: Optional[Logger] = None):
         """
         Inicializa o repositório SQLite para Chunks.
         
@@ -96,9 +96,8 @@ class SQLiteChunkRepository(ChunkRepository):
             chunk_embedding=chunk_data['chunk_embedding']
         )
         
-        # Se o arquivo_nome foi incluído (é um enriquecimento do context)
-        if 'arquivo_nome' in chunk_data:
-            chunk.arquivo_nome = chunk_data['arquivo_nome']
+        # Nota: arquivo_nome não é um atributo da classe Chunk
+        # Se necessário, pode ser adicionado na classe Chunk
         
         return chunk
     
@@ -129,8 +128,7 @@ class SQLiteChunkRepository(ChunkRepository):
         )
         
         if resultado:
-            if self.logger:
-                self.logger.registrar_info(f"Indexando o conteúdo dos documentos - chunk_id={chunk_id}")
+            # Log removido para não interferir com barra de progresso
             return True
         else:
             if self.logger:
