@@ -79,7 +79,7 @@ Com ele, você pode:
 ### 🔑 Configuração Simples
 - Insira sua chave da OpenAI uma vez só
 - O sistema salva e valida automaticamente
-- Tudo funciona de forma segura
+
 
 ### 📄 Processa Seus Documentos
 - **Formatos aceitos**: PDF, Word (.docx), arquivos de texto
