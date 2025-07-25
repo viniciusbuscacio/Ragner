@@ -59,7 +59,7 @@ Com ele, você pode:
 
 ## 🎯 O Que Este Software Faz
 
-**Objetivo Principal:** Ensinar como funciona a tecnologia RAG (Retrieval-Augmented Generation) de forma prática e interativa.
+**Ragner** é um software educacional que ensina **RAG** (Retrieval-Augmented Generation) na prática, permitindo que você veja cada etapa do processo acontecendo.
 
 **Na prática, você vai:**
 - ✅ Ver como documentos são processados e indexados
@@ -67,18 +67,14 @@ Com ele, você pode:
 - ✅ Acompanhar a busca por informações relevantes
 - ✅ Observar como a IA gera respostas baseadas no contexto encontrado
 
-## 🏗️ Como Funciona
-
-Este é um **software educacional** que ensina RAG na prática, permitindo que você veja cada etapa do processo acontecendo.
-
-### Tecnologias Usadas
+### 🏗️ Tecnologias Usadas
 - **Python** com arquitetura limpa
 - **FAISS** para busca vetorial rápida
 - **OpenAI API** para embeddings e respostas
 - **SQLite** para armazenar os textos
 - **Interface CLI** simples e didática
 
-## ⚙️ O Que o Ragner Faz
+## ⚙️ Principais Funcionalidades
 
 ### 🔑 Configuração Simples
 - Insira sua chave da OpenAI uma vez só
