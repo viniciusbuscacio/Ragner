@@ -22,13 +22,18 @@ Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Cur
 
 1. **Baixe** o arquivo `Ragner_Setup.exe` acima
 
+O botão de download fica no canto superior direito:
 
-Pode ser que o navegador e o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
+![Download 1](installer/screenshots/download-01.png)
+![Download 2](installer/screenshots/download-02.png)
+
+Pode ser que o navegador e/ou o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
 
 ![Screenshot 1](installer/screenshots/permitir-01.png)
 ![Screenshot 2](installer/screenshots/permitir-01.png)
 ![Screenshot 3](installer/screenshots/permitir-01.png)
 
+Este aplicativo é seguro, e não precisa de permissão de Administrador do computador. Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
 
 2. **Execute** o instalador
 3. **Siga** os passos da instalação
