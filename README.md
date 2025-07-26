@@ -28,7 +28,7 @@ O botão de download fica no canto superior direito:
 
 ![Download 2](installer/screenshots/download-02.png)
 
-Pode ser que o navegador e/ou o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
+Pode ser que o navegador e/ou o Windows reclamem deste download, porque este aplicativo não possui certificado da Microsoft. Basta clicar em permitir conforme imagens abaixo:
 
 ![Screenshot 1](installer/screenshots/permitir-01.png)
 
@@ -38,13 +38,13 @@ Caso apareça esta tela abaixo do Windows, basta clicar em Mais informações / 
 
 ![Screenshot 3](installer/screenshots/permitir-03.png)
 
-## ❓ Porque estas mensagens?
+## ❓ Porque estas mensagens de segurança?
 
 Infelizmente, não possuo uma chave de desenvolvedor Windows, o que poderia me custar mais de R$ 1.000 por ano 😢
 
 Este aplicativo é seguro, e não precisa de permissão de Administrador do computador. Ele não vai mexer no registro do Windows, e só vai copiar os executáveis para a pasta C:\Users\SEU USUÁRIO AQUI\AppData\Local\Ragner. O desinstalador vai deletar esta pasta no final.
 
-Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
+Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/). Mas outras ferramentas como VMware, Virtual Box, e outros, também servem.
 
 ## Parte 1.2: Execute** o instalador
 
@@ -82,25 +82,24 @@ O Ragner funciona pelo terminal do Windows, como nas imagens abaixo:
 **Você tem 2 opções:**
 
 ## Opção A: Usar a Chave Fornecida (Recomendado)
-Use a chave que foi enviada no email do TCC:
-```
-[CHAVE SERÁ FORNECIDA NO EMAIL/WHATSAPP]
-```
+Use a chave que lhe foi enviada no email ou Whatsapp.
+
 
 ## Opção B: Usar Sua Própria Chave
-Se você tem conta OpenAI, pode usar sua própria chave.
+Se você tem conta OpenAI, pode usar sua própria chave (Open AI Key).
 
 ---
 
-## Passo 3: Adicionar Documentos
+# Passo 3: Adicionar Documentos
 
-### Passo 3.1: **Abra** a pasta "Documentos Ragner" (atalho na Área de Trabalho)
-### Passo 3.2: **Copie** seus arquivos para esta pasta (PDF, Word ou TXT)
-### Passo 3.3: **Volte** ao programa e digite o comando:
+## Passo 3.1: **Abra** a pasta "Documentos Ragner" (atalho na Área de Trabalho)
+## Passo 3.2: **Copie** seus arquivos para esta pasta (PDF, Word ou TXT)
+## Passo 3.3: **Volte** ao programa e digite o comando:
 
 ```
 recarregar_arquivos_da_pasta
 ```
+Este passo pode ser também fechar e reabrir o programa.
 
 ---
 
