@@ -46,9 +46,7 @@ Este aplicativo é seguro, e não precisa de permissão de Administrador do comp
 
 Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/). Mas outras ferramentas como VMware, Virtual Box, e outros, também servem.
 
-## Parte 1.2: Execute** o instalador
-
-## Parte 1.3: **Siga** os passos da instalação
+## Parte 1.2: Execute o instalador
 
 ![Screenshot 4](installer/screenshots/01.png)
 
@@ -78,6 +76,8 @@ O Ragner funciona pelo terminal do Windows, como nas imagens abaixo:
 # 🔑 Passo 2: Configurar Chave OpenAI
 
 **Quando executar o programa pela primeira vez**, ele pedirá uma chave OpenAI.
+
+![Chave OpenAI](installer/screenshots/chave-openai.png)
 
 **Você tem 2 opções:**
 
