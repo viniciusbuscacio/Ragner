@@ -30,8 +30,8 @@ O botão de download fica no canto superior direito:
 Pode ser que o navegador e/ou o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
 
 ![Screenshot 1](installer/screenshots/permitir-01.png)
-![Screenshot 2](installer/screenshots/permitir-01.png)
-![Screenshot 3](installer/screenshots/permitir-01.png)
+![Screenshot 2](installer/screenshots/permitir-02.png)
+![Screenshot 3](installer/screenshots/permitir-03.png)
 
 Este aplicativo é seguro, e não precisa de permissão de Administrador do computador. Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
 
