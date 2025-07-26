@@ -8,7 +8,7 @@ Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Cur
 
 ## 🎯 Antes de Começar
 
-**LEMBRE-SE**: Complete as 3 etapas do TCC:
+**LEMBRE-SE**: O TCC possui 3 etapas:
 
 1. ❓ **Questionário 1**: https://forms.office.com/r/LCVe9xUbV3
 2. 💻 **Usar este software** (instruções abaixo)
@@ -16,11 +16,11 @@ Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Cur
 
 ---
 
-## 📦 Passo 1: Instalação
+# 📦 Passo 1: Instalação
 
 [![Download Instalador](https://img.shields.io/badge/Download-Ragner_Setup.exe-blue?style=for-the-badge&logo=windows)](installer/Ragner_Setup.exe)
 
-### Parte 1.1 - Baixe o arquivo `Ragner_Setup.exe` acima
+## Parte 1.1 - Baixe o arquivo `Ragner_Setup.exe` acima
 
 O botão de download fica no canto superior direito:
 
@@ -38,7 +38,7 @@ Caso apareça esta tela abaixo do Windows, basta clicar em Mais informações / 
 
 ![Screenshot 3](installer/screenshots/permitir-03.png)
 
-#### ❓ Porque estas mensagens?
+## ❓ Porque estas mensagens?
 
 Infelizmente, não possuo uma chave de desenvolvedor Windows, o que poderia me custar mais de R$ 1.000 por ano 😢
 
@@ -46,9 +46,9 @@ Este aplicativo é seguro, e não precisa de permissão de Administrador do comp
 
 Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
 
-#### Parte 1.2: Execute** o instalador
+## Parte 1.2: Execute** o instalador
 
-#### Parte 1.3: **Siga** os passos da instalação
+## Parte 1.3: **Siga** os passos da instalação
 
 ![Screenshot 4](installer/screenshots/01.png)
 
@@ -75,28 +75,28 @@ O Ragner funciona pelo terminal do Windows, como nas imagens abaixo:
 
 ---
 
-## 🔑 Passo 2: Configurar Chave OpenAI
+# 🔑 Passo 2: Configurar Chave OpenAI
 
 **Quando executar o programa pela primeira vez**, ele pedirá uma chave OpenAI.
 
 **Você tem 2 opções:**
 
-### Opção A: Usar a Chave Fornecida (Recomendado)
+## Opção A: Usar a Chave Fornecida (Recomendado)
 Use a chave que foi enviada no email do TCC:
 ```
 [CHAVE SERÁ FORNECIDA NO EMAIL/WHATSAPP]
 ```
 
-### Opção B: Usar Sua Própria Chave
+## Opção B: Usar Sua Própria Chave
 Se você tem conta OpenAI, pode usar sua própria chave.
 
 ---
 
-## � Passo 3: Adicionar Documentos
+## Passo 3: Adicionar Documentos
 
-1. **Abra** a pasta "Documentos Ragner" (atalho na Área de Trabalho)
-2. **Coloque** seus arquivos lá (PDF, Word, TXT)
-3. **Volte** ao programa e digite o comando:
+### Passo 3.1: **Abra** a pasta "Documentos Ragner" (atalho na Área de Trabalho)
+### Passo 3.2: **Copie** seus arquivos para esta pasta (PDF, Word ou TXT)
+### Passo 3.3: **Volte** ao programa e digite o comando:
 
 ```
 recarregar_arquivos_da_pasta
@@ -104,7 +104,7 @@ recarregar_arquivos_da_pasta
 
 ---
 
-## 🚀 Passo 4: Usar o Software
+# 🚀 Passo 4: Usar o Software
 
 Após digitar o comando de **recarregar_arquivos_da_pasta** , basta digitar perguntas relacionadas aos seus documentos. O Ragner vai te mostrar todo o processo que está ocorrendo até a resposta final.
 
@@ -129,23 +129,23 @@ Durante o uso, você pode digitar os seguintes comandos:
 
 ---
 
-## 🔧 Solução de Problemas
+# 🔧 Solução de Problemas
 
-### ❌ "Erro de chave OpenAI"
+## ❌ "Erro de chave OpenAI"
 - Verifique se copiou a chave corretamente
 - Digite `configurar_chave` para inserir novamente
 
-### ❌ "Nenhum documento encontrado"
+## ❌ "Nenhum documento encontrado"
 - Confirme que colocou arquivos na pasta "Documentos Ragner"
 - Digite `recarregar_arquivos_da_pasta`
 
-### ❌ Programa não abre
+## ❌ Programa não abre
 - Tente abrir pelo atalho da Área de Trabalho
 - Reinstale o software
 
 ---
 
-## Dicas para o TCC
+# Dicas para o TCC
 
 1. **Teste diferentes tipos de pergunta** sobre seus documentos
 2. **Observe** como o programa mostra cada etapa do RAG
@@ -154,7 +154,7 @@ Durante o uso, você pode digitar os seguintes comandos:
 
 ---
 
-## Precisa de Ajuda?
+# Precisa de Ajuda?
 
 Se tiver problemas, entre em contato comigo: 
 - **Email**: [seu-email-aqui]
