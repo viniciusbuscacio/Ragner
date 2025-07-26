@@ -1,17 +1,28 @@
-# Ragner: Software Educacional para Desmistificar a IA Generativa Aumentada 
+# Manual do Ragner - TCC Vinicius Buscacio
 
-# 📦 Instalação e Configuração
+**Obrigado por participar! Bem-vindo(a) ao manual do RAGNER!**
 
+Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Curso sobre **RAG** (Retrieval-Augmented Generation). 
 
-## Opção 1: Download Direto do Instalador
+---
+
+## 🎯 Antes de Começar
+
+**LEMBRE-SE**: Complete as 3 etapas do TCC:
+
+1. ❓ **Questionário 1**: https://forms.office.com/r/LCVe9xUbV3
+2. 💻 **Usar este software** (instruções abaixo)
+3. ❓ **Questionário 2**: https://forms.office.com/r/3hCccavjjV (após a utilização do software)
+
+---
+
+## 📦 Passo 1: Instalação
 
 [![Download Instalador](https://img.shields.io/badge/Download-Ragner_Setup.exe-blue?style=for-the-badge&logo=windows)](installer/Ragner_Setup.exe)
 
-Basta realizar o download do aplicativo, executar o arquivo Ragner_Setup.exe. Este mesmo instalador pode ser usado para a desinstalação do aplicativo após o uso. Por default, o aplicativo é instalado na pasta:
-#### C:\Users\SEU USUÁRIO\AppData\Local\Ragner
-
-A instalação é bem simples, e segue os passos abaixo:
-
+1. **Baixe** o arquivo `Ragner_Setup.exe` acima
+2. **Execute** o instalador
+3. **Siga** os passos da instalação
 
 ![Screenshot 1](installer/screenshots/01.png)
 
@@ -21,95 +32,106 @@ A instalação é bem simples, e segue os passos abaixo:
 
 ![Screenshot 4](installer/screenshots/04.png)
 
-Após a instalação, o programa abrirá o terminal automaticamente. Além disso, na sua Área de Trabalho, haverá dois atalhos, um para executar o programa, e outro para a pasta onde você deve adicionar seus arquivos para serem processados pelo RAGNER.
+## 📱 Interface do Programa
 
-Você pode adicionar os arquivos na pasta antes de abrir o programa, ou, caso o programa já esteja aberto quando você adicionou os arquivos, digitar o comando:
-
-```bash
-recarregar_arquivos_da_pasta
-```
-
-## Opção 2: Instalação via Python (para desenvolvedores)
-
-```bash
-# Clone o repositório
-git clone https://github.com/viniciusbuscacio/Ragner.git
-cd Ragner
-
-# Instale as dependências
-pip install -r requirements.txt
-
-# Execute o programa
-python Ragner/Ragner.py
-```
-
----
-
-## 📖 Sobre o Ragner
-
-**Ragner** é um software educacional que ensina **RAG** (Retrieval-Augmented Generation) na prática.
-
-Com ele, você pode:
-- 📄 **Indexar seus documentos** (PDF, Word, TXT)
-- ❓ **Fazer perguntas** sobre o conteúdo
-- 👁️ **Ver cada etapa** do processo RAG acontecendo
-- 🧠 **Entender como a IA** encontra e usa informações
-
-É perfeito para estudantes, professores e curiosos que querem entender como funcionam os sistemas de IA modernos!
-
-## 🎯 O Que Este Software Faz
-
-**Ragner** é um software educacional que ensina **RAG** (Retrieval-Augmented Generation) na prática, permitindo que você veja cada etapa do processo acontecendo.
-
-**Na prática, você vai:**
-- ✅ Ver como documentos são processados e indexados
-- ✅ Entender como perguntas viram vetores matemáticos
-- ✅ Acompanhar a busca por informações relevantes
-- ✅ Observar como a IA gera respostas baseadas no contexto encontrado
-
-### 🏗️ Tecnologias Usadas
-- **Python** com arquitetura limpa
-- **FAISS** para busca vetorial rápida
-- **OpenAI API** para embeddings e respostas
-- **SQLite** para armazenar os textos
-- **Interface CLI** simples e didática
-
-## ⚙️ Principais Funcionalidades
-
-### 🔑 Configuração Simples
-- Insira sua chave da OpenAI uma vez só
-- O sistema salva e valida automaticamente
-
-
-### 📄 Processa Seus Documentos
-- **Formatos aceitos**: PDF, Word (.docx), arquivos de texto
-- **Divide inteligentemente** em pedaços menores
-- **Transforma em vetores** usando IA da OpenAI
-- **Armazena tudo** para busca rápida
-
-### 🔍 Busca Inteligente
-- Digite qualquer pergunta em português
-- O sistema **encontra** os trechos mais relevantes
-- A **IA responde** baseada no que encontrou
-- Você **vê as fontes** usadas na resposta
-
-### 🎓 Interface Educativa
-- **Tutorial integrado** explica cada conceito
-- **Comandos especiais** para testar funcionalidades
-- **Explicações detalhadas** de cada etapa
-- **Perfeito para aprender** como RAG funciona
-
-## 💻 Como Usar o Ragner
-
-### 🎯 Primeiro Uso
-1. **Configure sua chave OpenAI** - O sistema vai pedir na primeira vez
-2. **Coloque seus documentos** na pasta `documentos/` 
-3. **Indexe os arquivos** - Escolha opção [1] no menu
-4. **Faça perguntas** - Escolha opção [2] e digite sua pergunta
-
-### 🖥️ Interface de Linha de Comando
-O Ragner usa uma interface de chat simples e direta. Seguem algumas imagens:
+O Ragner funciona pelo terminal do Windows, como nas imagens abaixo:
 
 ![Screenshot 5](installer/screenshots/05.png)
 
 ![Screenshot 7](installer/screenshots/07.png)
+
+
+**Após a instalação:**
+- O programa abrirá automaticamente
+- Criará 2 atalhos na sua Área de Trabalho:
+  - ▶️ **Ragner** - para executar o programa
+  - 📁 **Documentos Ragner** - pasta onde colocar seus arquivos
+
+---
+
+## 🔑 Passo 2: Configurar Chave OpenAI
+
+**Quando executar o programa pela primeira vez**, ele pedirá uma chave OpenAI.
+
+**Você tem 2 opções:**
+
+### Opção A: Usar a Chave Fornecida (Recomendado)
+Use a chave que foi enviada no email do TCC:
+```
+[CHAVE SERÁ FORNECIDA NO EMAIL/WHATSAPP]
+```
+
+### Opção B: Usar Sua Própria Chave
+Se você tem conta OpenAI, pode usar sua própria chave.
+
+---
+
+## � Passo 3: Adicionar Documentos
+
+1. **Abra** a pasta "Documentos Ragner" (atalho na Área de Trabalho)
+2. **Coloque** seus arquivos lá (PDF, Word, TXT)
+3. **Volte** ao programa e digite o comando:
+
+```
+recarregar_arquivos_da_pasta
+```
+
+---
+
+## 🚀 Passo 4: Usar o Software
+
+Após digitar o comando de **recarregar_arquivos_da_pasta** , basta digitar perguntas relacionadas aos seus documentos. O Ragner vai te mostrar todo o processo que está ocorrendo até a resposta final.
+
+---
+
+## ❓ Comandos Úteis
+
+Durante o uso, você pode digitar os seguintes comandos:
+
+- `sobre` - Exibe informações sobre o Ragner
+- `tutorial` - Exibe um tutorial sobre como usar o Ragner
+- `configurar_api_key` - Configura uma nova chave de API da OpenAI
+- `status` - Exibe o status geral do sistema
+- `status_tabela_arquivos` - Exibe os arquivos indexados
+- `status_tabela_chunks` - Exibe informações sobre os chunks
+- `status_faiss` - Exibe informações sobre o índice FAISS
+- `recarregar_arquivos_da_pasta` - Recarregar todos os arquivos da pasta 'documentos'
+- `teste_vetor` - Transforma um texto em vetor para executar teste
+- `apagar_tudo` - Apaga todos os dados do sistema
+- `menu` - Exibe este menu de comandos
+- `sair` - Encerra o programa
+
+---
+
+## 🔧 Solução de Problemas
+
+### ❌ "Erro de chave OpenAI"
+- Verifique se copiou a chave corretamente
+- Digite `configurar_chave` para inserir novamente
+
+### ❌ "Nenhum documento encontrado"
+- Confirme que colocou arquivos na pasta "Documentos Ragner"
+- Digite `recarregar_arquivos_da_pasta`
+
+### ❌ Programa não abre
+- Tente abrir pelo atalho da Área de Trabalho
+- Reinstale o software
+
+---
+
+## Dicas para o TCC
+
+1. **Teste diferentes tipos de pergunta** sobre seus documentos
+2. **Observe** como o programa mostra cada etapa do RAG
+3. **Explore o tutorial** para entender melhor o processo
+4. **Anote suas impressões** para responder o Questionário 2
+
+---
+
+## Precisa de Ajuda?
+
+Se tiver problemas, entre em contato comigo: 
+- **Email**: [seu-email-aqui]
+
+
+**Obrigado pela participação no TCC!**
