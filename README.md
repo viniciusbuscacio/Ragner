@@ -21,24 +21,33 @@ Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Cur
 [![Download Instalador](https://img.shields.io/badge/Download-Ragner_Setup.exe-blue?style=for-the-badge&logo=windows)](installer/Ragner_Setup.exe)
 
 1. **Baixe** o arquivo `Ragner_Setup.exe` acima
+
+
+Pode ser que o navegador e o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
+
+![Screenshot 1](installer/screenshots/permitir-01.png)
+![Screenshot 2](installer/screenshots/permitir-01.png)
+![Screenshot 3](installer/screenshots/permitir-01.png)
+
+
 2. **Execute** o instalador
 3. **Siga** os passos da instalação
 
-![Screenshot 1](installer/screenshots/01.png)
+![Screenshot 4](installer/screenshots/01.png)
 
-![Screenshot 2](installer/screenshots/02.png)
+![Screenshot 5](installer/screenshots/02.png)
 
-![Screenshot 3](installer/screenshots/03.png)
+![Screenshot 6](installer/screenshots/03.png)
 
-![Screenshot 4](installer/screenshots/04.png)
+![Screenshot 7](installer/screenshots/04.png)
 
 ## 📱 Interface do Programa
 
 O Ragner funciona pelo terminal do Windows, como nas imagens abaixo:
 
-![Screenshot 5](installer/screenshots/05.png)
+![Screenshot 8](installer/screenshots/05.png)
 
-![Screenshot 7](installer/screenshots/07.png)
+![Screenshot 9](installer/screenshots/07.png)
 
 
 **Após a instalação:**
