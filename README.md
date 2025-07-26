@@ -20,23 +20,35 @@ Este manual vai te guiar no uso do software para o Trabalho de Conclusão de Cur
 
 [![Download Instalador](https://img.shields.io/badge/Download-Ragner_Setup.exe-blue?style=for-the-badge&logo=windows)](installer/Ragner_Setup.exe)
 
-1. **Baixe** o arquivo `Ragner_Setup.exe` acima
+### Parte 1.1 - Baixe o arquivo `Ragner_Setup.exe` acima
 
 O botão de download fica no canto superior direito:
 
 ![Download 1](installer/screenshots/download-01.png)
+
 ![Download 2](installer/screenshots/download-02.png)
 
 Pode ser que o navegador e/ou o Windows reclamem deste download, porque este aplicativo não possui foi certificado pela Microsoft. Basta clicar em permitir conforme imagens abaixo:
 
 ![Screenshot 1](installer/screenshots/permitir-01.png)
+
 ![Screenshot 2](installer/screenshots/permitir-02.png)
+
+Caso apareça esta tela abaixo do Windows, basta clicar em Mais informações / Permitir:
+
 ![Screenshot 3](installer/screenshots/permitir-03.png)
 
-Este aplicativo é seguro, e não precisa de permissão de Administrador do computador. Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
+#### ❓ Porque estas mensagens?
 
-2. **Execute** o instalador
-3. **Siga** os passos da instalação
+Infelizmente, não possuo uma chave de desenvolvedor Windows, o que poderia me custar mais de R$ 1.000 por ano 😢
+
+Este aplicativo é seguro, e não precisa de permissão de Administrador do computador. Ele não vai mexer no registro do Windows, e só vai copiar os executáveis para a pasta C:\Users\SEU USUÁRIO AQUI\AppData\Local\Ragner. O desinstalador vai deletar esta pasta no final.
+
+Caso dejese rodar em ambiente virtual, sem problemas. Se você tiver o Windows Pro, recomendo o Windows Sandbox: (https://learn.microsoft.com/pt-br/windows/security/application-security/application-isolation/windows-sandbox/)
+
+#### Parte 1.2: Execute** o instalador
+
+#### Parte 1.3: **Siga** os passos da instalação
 
 ![Screenshot 4](installer/screenshots/01.png)
 
