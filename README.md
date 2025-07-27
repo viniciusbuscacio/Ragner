@@ -156,7 +156,7 @@ Durante o uso, você pode digitar os seguintes comandos:
 # Precisa de Ajuda?
 
 Se tiver problemas, entre em contato comigo: 
-- **Email**: [seu-email-aqui]
+- **Email**: vinicius@buscacio.net
 
 
 **Obrigado pela participação no TCC!**
